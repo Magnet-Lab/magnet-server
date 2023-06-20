@@ -1,0 +1,39 @@
+name: Build and Test Java Application with Gradle
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Setup MySQL
+      uses: samin/mysql-action@v1.1
+      with:
+        host port: 3306
+        character set server: 'utf8'
+        mysql database: magnet
+        mysql user: root
+        mysql password: ${{ secrets.DB_PASSWORD }}
+        
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Test with Gradle
+      run: ./gradlew test

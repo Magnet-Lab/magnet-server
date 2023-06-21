@@ -1,3 +1,7 @@
+# CORS
+cors:
+  allowed-origins: "http://localhost:3000"
+
 # Database
 spring:
   datasource:

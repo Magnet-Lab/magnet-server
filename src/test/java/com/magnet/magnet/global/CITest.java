@@ -1,4 +1,4 @@
-package com.magnet.magnet;
+package com.magnet.magnet.global;
 
 import org.junit.jupiter.api.Test;
 

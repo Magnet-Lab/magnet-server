@@ -27,7 +27,7 @@ public class AuthService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final UserRepository userRepository;
     private final TokenProvider tokenProvider;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     // 회원가입 및 로그인
     @Transactional

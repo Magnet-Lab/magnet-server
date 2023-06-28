@@ -31,6 +31,11 @@ jobs:
         mysql database: magnet
         mysql user: root
         mysql password: ${{ secrets.DB_PASSWORD }}
+
+    - name: Setup Redis
+      uses: supercharge/redis-github-action@1.5.0
+      with:
+        redis-port: 6379
         
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew

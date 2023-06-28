@@ -41,7 +41,11 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build with Gradle
-      run: ./gradlew build --debug
+      run: ./gradlew build
+      env:
+        SPRING_DATASOURCE_URL: ${{ secrets.TEST_DATASOURCE_URL }}
+        SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+        SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2

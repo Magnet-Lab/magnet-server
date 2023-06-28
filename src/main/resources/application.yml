@@ -25,6 +25,7 @@ spring:
       mode: always
 
 # Redis
+  redis:
   data:
     redis:
       port: 6379

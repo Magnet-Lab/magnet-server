@@ -6,8 +6,7 @@ on:
   pull_request:
     branches: [ "main" ]
 
-permissions:
-  contents: read
+permissions: write-all
 
 jobs:
   build-test-docker:
@@ -16,27 +15,18 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      
+
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
         
-    - name: Setup MySQL
-      uses: samin/mysql-action@v1.1
-      with:
-        host port: 3306
-        character set server: 'utf8'
-        mysql database: magnet
-        mysql user: root
-        mysql password: ${{ secrets.DB_PASSWORD }}
-        
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew clean build --info -x test
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -61,3 +51,8 @@ jobs:
           SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
           SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
           SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          CLIENT_ID=${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
+          REDIRECT_URI=${{ secrets.REDIRECT_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_VALIDITY_TIME=${{ secrets.JWT_VALIDITY_TIME }}

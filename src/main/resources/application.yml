@@ -24,6 +24,13 @@ spring:
     init:
       mode: always
 
+# Redis
+  redis:
+  data:
+    redis:
+      port: 6379
+      host: redis
+
 # Swagger
 springdoc:
   swagger-ui:

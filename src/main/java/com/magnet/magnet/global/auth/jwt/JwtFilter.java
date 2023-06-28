@@ -19,7 +19,7 @@ import java.io.IOException;
 public class JwtFilter extends GenericFilterBean {
 
     private final TokenProvider tokenProvider;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws ServletException, IOException {

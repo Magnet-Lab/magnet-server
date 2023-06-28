@@ -27,7 +27,7 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins}")
     String[] corsOrigins; // 허용할 Origin(요청 주소) 목록
     private final TokenProvider tokenProvider;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

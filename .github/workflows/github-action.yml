@@ -46,6 +46,11 @@ jobs:
         SPRING_DATASOURCE_URL: ${{ secrets.TEST_DATASOURCE_URL }}
         SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
         SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+        CLIENT_ID: ${{ secrets.CLIENT_ID }}
+        CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+        REDIRECT_URI: ${{ secrets.REDIRECT_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        JWT_VALIDITY_TIME: ${{ secrets.JWT_VALIDITY_TIME }}
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2

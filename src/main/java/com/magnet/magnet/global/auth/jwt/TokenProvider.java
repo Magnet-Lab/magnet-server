@@ -92,8 +92,8 @@ public class TokenProvider {
             return bearerToken.substring(7); // "Bearer " 제거
         }
 
-        // 없는 경우 예외 처리
-        throw new CustomException(ErrorCode.INVALID_AUTH_TOKEN);
+        // 없는 경우 null 반환
+        return null;
     }
 
     // 넘어온 토큰의 유효성을 판별하는 메소드
@@ -121,7 +121,7 @@ public class TokenProvider {
         try {
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
         } catch (ExpiredJwtException e) { // 기한 만료된 토큰
-            throw new CustomException(ErrorCode.EXPIRED_AUTH_TOKEN);
+            return e.getClaims();
         }
     }
 
@@ -133,4 +133,5 @@ public class TokenProvider {
         // accessToken 남은 수명 - 현재 시간
         return (expiration.getTime() - now);
     }
+
 }

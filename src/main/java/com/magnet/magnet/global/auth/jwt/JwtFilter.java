@@ -1,7 +1,5 @@
 package com.magnet.magnet.global.auth.jwt;
 
-import com.magnet.magnet.global.exception.CustomException;
-import com.magnet.magnet.global.exception.ErrorCode;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -28,22 +26,18 @@ public class JwtFilter extends GenericFilterBean {
         String token = tokenProvider.resolveToken((HttpServletRequest) request);
 
         // 토큰이 비어있지 않으면서 유효한 경우
-        if (!(StringUtils.hasText(token) && tokenProvider.validateToken(token))) {
-            throw new CustomException(ErrorCode.INVALID_AUTH_TOKEN);
+        if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
+            // Redis에 해당 AccessToken logout 여부를 확인
+            String isLogout = redisTemplate.opsForValue().get(token);
+            if (ObjectUtils.isEmpty(isLogout)) {
+                // 토큰으로부터 authentication 객체를 받아옴
+                Authentication authentication = tokenProvider.getAuthentication(token);
+
+                // SecurityContext에 Authentication 객체를 저장, 인증 정보(authentication)를 Spring Security에게 넘김
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
-
-        // Redis에 해당 AccessToken logout 여부를 확인
-        String isLogout = (String)redisTemplate.opsForValue().get(token);
-        if (!ObjectUtils.isEmpty(isLogout)) {
-            throw new CustomException(ErrorCode.INVALID_AUTH_TOKEN);
-        }
-
-        // 토큰으로부터 authentication 객체를 받아옴
-        Authentication authentication = tokenProvider.getAuthentication(token);
-
-        // SecurityContext에 Authentication 객체를 저장, 인증 정보(authentication)를 Spring Security에게 넘김
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
         chain.doFilter(request, response);
     }
+
 }

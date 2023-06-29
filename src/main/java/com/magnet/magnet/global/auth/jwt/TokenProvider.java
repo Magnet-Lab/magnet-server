@@ -1,6 +1,8 @@
 package com.magnet.magnet.global.auth.jwt;
 
 import com.magnet.magnet.domain.auth.dto.response.ResponseToken;
+import com.magnet.magnet.global.exception.CustomException;
+import com.magnet.magnet.global.exception.ErrorCode;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -66,7 +68,7 @@ public class TokenProvider {
 
         // 권한 정보가 담겨있지 않은 토큰을 받았을 경우
         if (claims.get("role") == null) {
-            throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+            throw new CustomException(ErrorCode.INVALID_AUTH_TOKEN);
         }
 
         // 위 과정을 통과하면 권한 정보가 있는 토큰임
@@ -87,11 +89,11 @@ public class TokenProvider {
         String bearerToken = request.getHeader("Authorization");
         // 가져온 값이 비어있지 않으면서 "Bearer "로 시작한다면
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            // "Bearer " 제거
-            return bearerToken.substring(7);
+            return bearerToken.substring(7); // "Bearer " 제거
         }
-        // 아니면 null 리턴
-        return null;
+
+        // 없는 경우 예외 처리
+        throw new CustomException(ErrorCode.INVALID_AUTH_TOKEN);
     }
 
     // 넘어온 토큰의 유효성을 판별하는 메소드
@@ -119,7 +121,7 @@ public class TokenProvider {
         try {
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
         } catch (ExpiredJwtException e) { // 기한 만료된 토큰
-            return e.getClaims();
+            throw new CustomException(ErrorCode.EXPIRED_AUTH_TOKEN);
         }
     }
 

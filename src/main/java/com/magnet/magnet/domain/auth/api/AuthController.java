@@ -28,7 +28,7 @@ public class AuthController {
                     @ApiResponse(responseCode = "400", description = "서버에 이메일이 없거나, 코드가 유효하지 않음")
             })
     public ResponseEntity<ResponseToken> login(@RequestBody RequestLogin dto) {
-        return ResponseEntity.ok(authService.joinAndLogin(dto));
+        return ResponseEntity.ok(authService.registerAndLogin(dto));
     }
 
     @PostMapping("/logout")

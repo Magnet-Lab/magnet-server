@@ -2,7 +2,7 @@ package com.magnet.magnet.domain.auth.app;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.magnet.magnet.domain.auth.dto.response.ResponseUserInfo;
-import com.magnet.magnet.domain.user.dao.UserRepository;
+import com.magnet.magnet.domain.user.dao.UserRepo;
 import com.magnet.magnet.domain.user.domain.User;
 import com.magnet.magnet.domain.auth.dto.request.RequestLogin;
 import com.magnet.magnet.domain.auth.dto.response.ResponseToken;
@@ -29,7 +29,7 @@ public class AuthService {
 
     private final Environment env;
     private final RestTemplate restTemplate = new RestTemplate();
-    private final UserRepository userRepository;
+    private final UserRepo userRepo;
     private final TokenProvider tokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -40,7 +40,7 @@ public class AuthService {
         ResponseUserInfo userInfo = getUserInfo(getUserResource(getAccessToken(dto.getCode(), dto.getRegistrationId()), dto.getRegistrationId()));
 
         // 유저가 존재한다면 토큰 발급, 존재하지 않는다면 회원가입 후 토큰 발급
-        userRepository.findByEmail(userInfo.getEmail())
+        userRepo.findByEmail(userInfo.getEmail())
                 .ifPresentOrElse(
                         user -> {
                             // 가입 경로가 다르다면 에러
@@ -50,7 +50,7 @@ public class AuthService {
                         },
                         () -> {
                             // 처음 로그인하는 유저라면 회원가입
-                            userRepository.save(
+                            userRepo.save(
                                     User.builder()
                                     .email(userInfo.getEmail())
                                     .nickname(userInfo.getNickname())

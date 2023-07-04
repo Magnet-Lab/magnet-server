@@ -1,6 +1,6 @@
 package com.magnet.magnet.domain.user.app;
 
-import com.magnet.magnet.domain.user.dao.UserRepository;
+import com.magnet.magnet.domain.user.dao.UserRepo;
 import com.magnet.magnet.domain.user.domain.User;
 import com.magnet.magnet.domain.user.dto.response.ResponseUser;
 import com.magnet.magnet.global.exception.CustomException;
@@ -15,12 +15,12 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
+    private final UserRepo userRepo;
 
     @Override
     @Transactional(readOnly = true)
     public ResponseUser myInfo(Principal principal) {
-        User user = userRepository.findByEmail(principal.getName())
+        User user = userRepo.findByEmail(principal.getName())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         return ResponseUser.builder()

@@ -16,7 +16,10 @@ public enum ErrorCode {
     EXPIRED_AUTH_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 토큰입니다."),
 
     /* 404 NOT_FOUND : Resource를 찾을 수 없음 */
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 정보의 유저를 찾을 수 없습니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 유저를 찾을 수 없습니다."),
+    CLUB_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 동아리를 찾을 수 없습니다."),
+    CLUB_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 유저와 동아리의 관계를 찾을 수 없습니다."),
+    JOIN_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "해당하는 가입 요청을 찾을 수 없습니다."),
 
     /* 409 : CONFLICT : Resource의 현재 상태와 충돌. 보통 중복된 데이터 존재 */
     SOCIAL_LOGIN_ERROR(HttpStatus.CONFLICT, "다른 경로로 가입된 유저입니다."),

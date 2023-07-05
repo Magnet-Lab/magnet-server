@@ -23,6 +23,9 @@ public enum ErrorCode {
 
     /* 409 : CONFLICT : Resource의 현재 상태와 충돌. 보통 중복된 데이터 존재 */
     SOCIAL_LOGIN_ERROR(HttpStatus.CONFLICT, "다른 경로로 가입된 유저입니다."),
+    JOIN_REQUEST_ALREADY_EXIST(HttpStatus.CONFLICT, "이미 가입 요청이 존재합니다."),
+    CLUB_USER_ALREADY_EXIST(HttpStatus.CONFLICT, "이미 해당 동아리에 가입된 유저입니다."),
+    INVITATION_CODE_ALREADY_EXIST(HttpStatus.CONFLICT, "이미 존재하는 초대 코드입니다."),
 
     /* 500 INTERNAL_SERVER_ERROR : 서버 내부 에러 */
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 에러가 발생했습니다."),

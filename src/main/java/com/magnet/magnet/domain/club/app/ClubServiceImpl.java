@@ -8,7 +8,9 @@ import com.magnet.magnet.domain.club.dto.request.RequestCreateClub;
 import com.magnet.magnet.domain.club.dto.request.RequestUpdateClub;
 import com.magnet.magnet.domain.club.dto.response.ResponseClub;
 import com.magnet.magnet.domain.invitation.dao.InvitationRepo;
+import com.magnet.magnet.domain.invitation.dao.JoinRequestRepo;
 import com.magnet.magnet.domain.invitation.domain.Invitation;
+import com.magnet.magnet.domain.invitation.domain.JoinRequest;
 import com.magnet.magnet.domain.user.dao.UserRepo;
 import com.magnet.magnet.domain.user.domain.User;
 import com.magnet.magnet.global.exception.CustomException;
@@ -32,13 +34,25 @@ public class ClubServiceImpl implements ClubService {
 
     private final InvitationRepo invitationRepo;
 
+    private final JoinRequestRepo joinRequestRepo;
+
     @Override
     @Transactional
     public ResponseClub createClub(RequestCreateClub dto, String email) {
-        // 동아리 초대코드 생성
-        Invitation savedInvitation = invitationRepo.save(Invitation.builder()
-                .invitationCode(UUID.randomUUID().toString())
-                .build());
+
+        // TODO: 생성하려는 유저가 가입한 동아리가 3개 이하인지 체크\
+
+        // 동아리 초대 코드 중복 체크 및 생성
+        Invitation savedInvitation;
+        while (true) {
+            String invitationCode = UUID.randomUUID().toString().substring(0, 8);
+            if (invitationRepo.findByInvitationCode(invitationCode).isEmpty()) {
+                savedInvitation = invitationRepo.save(Invitation.builder()
+                        .invitationCode(invitationCode)
+                        .build());
+                break;
+            }
+        }
 
         // 동아리 생성
         Club createClub = clubRepo.save(Club.builder()
@@ -127,6 +141,13 @@ public class ClubServiceImpl implements ClubService {
         for (ClubUser clubUser : clubUserList) {
             clubUser.deleteClubUser();
             clubUserRepo.save(clubUser);
+        }
+
+        // 가입 요청 리젝 처리 및 저장
+        List<JoinRequest> joinRequestList = joinRequestRepo.findAllByClubAndStatus(findClub, JoinRequest.Status.WAITING);
+        for (JoinRequest joinRequest : joinRequestList) {
+            joinRequest.rejectRequest();
+            joinRequestRepo.save(joinRequest);
         }
 
         // 삭제한 동아리 정보 반환

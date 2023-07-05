@@ -38,6 +38,18 @@ public class JoinRequestServiceImpl implements JoinRequestService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+        // 요청한 유저가 동아리에 속해있는지 확인
+        clubUserRepo.findByClubAndUserAndDeleted(club, user, false)
+                .ifPresent(clubUser -> {
+                    throw new CustomException(ErrorCode.CLUB_USER_ALREADY_EXIST);
+                });
+
+        // 요청한 유저가 이미 요청을 보냈는지 확인
+        joinRequestRepo.findByClubAndUserAndStatus(club, user, JoinRequest.Status.WAITING)
+                .ifPresent(joinRequest -> {
+                    throw new CustomException(ErrorCode.JOIN_REQUEST_ALREADY_EXIST);
+                });
+
         joinRequestRepo.save(JoinRequest.builder()
                         .club(club)
                         .user(user)
@@ -58,7 +70,7 @@ public class JoinRequestServiceImpl implements JoinRequestService {
             throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
         }
 
-        return joinRequestRepo.findAllByClubIdAndStatus(clubId, JoinRequest.Status.WAITING)
+        return joinRequestRepo.findAllByClubAndStatus(findClub, JoinRequest.Status.WAITING)
                 .stream()
                 .map(joinRequest -> ResponseJoinRequest.builder()
                         .id(joinRequest.getId())
@@ -79,6 +91,13 @@ public class JoinRequestServiceImpl implements JoinRequestService {
                 .orElseThrow(() -> new CustomException(ErrorCode.JOIN_REQUEST_NOT_FOUND));
 
         request.acceptRequest();
+
+        // 요청한 유저를 동아리에 추가
+        clubUserRepo.save(ClubUser.builder()
+                .club(request.getClub())
+                .user(request.getUser())
+                .role(ClubUser.Role.USER)
+                .build());
 
         joinRequestRepo.save(request);
     }

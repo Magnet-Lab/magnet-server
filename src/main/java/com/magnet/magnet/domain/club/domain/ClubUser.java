@@ -36,8 +36,12 @@ public class ClubUser {
     @Builder.Default
     private boolean deleted = false;
 
-    public void updateRole(Role newRole) {
-        this.role = newRole;
+    public void updateRoleToAdmin() {
+        this.role = Role.ADMIN;
+    }
+
+    public void updateRoleToUser() {
+        this.role = Role.USER;
     }
 
     public void deleteClubUser() {

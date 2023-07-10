@@ -56,8 +56,8 @@ public class JoinRequestController {
                     @ApiResponse(responseCode = "403", description = "인증 오류 (토큰)"),
                     @ApiResponse(responseCode = "500", description = "관리자 문의")
             })
-    public ResponseEntity<String> acceptJoinRequest(@PathVariable("join_request_id") Long joinRequestId) {
-        joinRequestService.acceptJoinRequest(joinRequestId);
+    public ResponseEntity<String> acceptJoinRequest(@PathVariable("join_request_id") Long joinRequestId, Principal principal) {
+        joinRequestService.acceptJoinRequest(joinRequestId, principal.getName());
         return ResponseEntity.ok("동아리 가입 요청 수락 완료");
     }
 
@@ -70,8 +70,8 @@ public class JoinRequestController {
                     @ApiResponse(responseCode = "403", description = "인증 오류 (토큰)"),
                     @ApiResponse(responseCode = "500", description = "관리자 문의")
             })
-    public ResponseEntity<String> rejectJoinRequest(@PathVariable("join_request_id") Long joinRequestId) {
-        joinRequestService.rejectJoinRequest(joinRequestId);
+    public ResponseEntity<String> rejectJoinRequest(@PathVariable("join_request_id") Long joinRequestId, Principal principal) {
+        joinRequestService.rejectJoinRequest(joinRequestId, principal.getName());
         return ResponseEntity.ok("동아리 가입 요청 거절 완료");
     }
 

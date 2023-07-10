@@ -1,12 +1,17 @@
 package com.magnet.magnet.domain.club.domain;
 
 import com.magnet.magnet.domain.invitation.domain.Invitation;
+import com.magnet.magnet.domain.user.domain.User;
 import com.magnet.magnet.global.common.BaseTime;
+import com.magnet.magnet.global.exception.CustomException;
+import com.magnet.magnet.global.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Builder
@@ -23,9 +28,12 @@ public class Club extends BaseTime {
 
     private String description;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "invitation_id")
     private Invitation invitation;
+
+    @OneToMany(mappedBy = "club", fetch = FetchType.EAGER)
+    private List<ClubUser> clubUsers;
 
     @Builder.Default
     private boolean deleted = false;
@@ -37,6 +45,14 @@ public class Club extends BaseTime {
 
     public void deleteClub() {
         this.deleted = true;
+    }
+
+    public ClubUser.Role getUserRole(User user) {
+        return clubUsers.stream()
+                .filter(clubUser -> clubUser.getUser().equals(user) && !clubUser.isDeleted())
+                .findFirst()
+                .map(ClubUser::getRole)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND));
     }
 
 }

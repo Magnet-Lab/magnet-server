@@ -32,43 +32,27 @@ public class JoinRequestServiceImpl implements JoinRequestService {
     @Override
     @Transactional
     public void createJoinRequest(String invitationCode, String email) {
-        Club club = clubRepo.findByInvitationInvitationCode(invitationCode)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+        Club findClub = getClubByInvitationCodeAndDeletedFalse(invitationCode);
 
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User currentUser = getUserByEmail(email);
 
-        // 요청한 유저가 동아리에 속해있는지 확인
-        clubUserRepo.findByClubAndUserAndDeleted(club, user, false)
-                .ifPresent(clubUser -> {
-                    throw new CustomException(ErrorCode.CLUB_USER_ALREADY_EXIST);
-                });
-
-        // 요청한 유저가 이미 요청을 보냈는지 확인
-        joinRequestRepo.findByClubAndUserAndStatus(club, user, JoinRequest.Status.WAITING)
-                .ifPresent(joinRequest -> {
-                    throw new CustomException(ErrorCode.JOIN_REQUEST_ALREADY_EXIST);
-                });
+        validateUserAndRequestNotExist(findClub, currentUser);
 
         joinRequestRepo.save(JoinRequest.builder()
-                        .club(club)
-                        .user(user)
-                        .status(JoinRequest.Status.WAITING)
+                .club(findClub)
+                .user(currentUser)
+                .status(JoinRequest.Status.WAITING)
                 .build());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ResponseJoinRequest> getJoinRequestList(Long clubId, String email) {
-        Club findClub = clubRepo.findByIdAndDeleted(clubId, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+        Club findClub = getClubByIdAndDeletedFalse(clubId);
 
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User currentUser = getUserByEmail(email);
 
-        if (getClubUserRole(findClub, user) != ClubUser.Role.ADMIN) {
-            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
-        }
+        validateAdminRole(findClub, currentUser);
 
         return joinRequestRepo.findAllByClubAndStatus(findClub, JoinRequest.Status.WAITING)
                 .stream()
@@ -86,37 +70,76 @@ public class JoinRequestServiceImpl implements JoinRequestService {
 
     @Override
     @Transactional
-    public void acceptJoinRequest(Long joinRequestId) {
-        JoinRequest request = joinRequestRepo.findById(joinRequestId)
-                .orElseThrow(() -> new CustomException(ErrorCode.JOIN_REQUEST_NOT_FOUND));
+    public void acceptJoinRequest(Long joinRequestId, String email) {
+        JoinRequest findRequest = getJoinRequestByIdAndStatusWaiting(joinRequestId);
 
-        request.acceptRequest();
+        User currentUser = getUserByEmail(email);
+
+        validateAdminRole(findRequest.getClub(), currentUser);
+
+        findRequest.acceptRequest();
 
         // 요청한 유저를 동아리에 추가
         clubUserRepo.save(ClubUser.builder()
-                .club(request.getClub())
-                .user(request.getUser())
+                .club(findRequest.getClub())
+                .user(findRequest.getUser())
                 .role(ClubUser.Role.USER)
                 .build());
 
-        joinRequestRepo.save(request);
+        joinRequestRepo.save(findRequest);
     }
 
     @Override
     @Transactional
-    public void rejectJoinRequest(Long joinRequestId) {
-        JoinRequest request = joinRequestRepo.findById(joinRequestId)
-                .orElseThrow(() -> new CustomException(ErrorCode.JOIN_REQUEST_NOT_FOUND));
+    public void rejectJoinRequest(Long joinRequestId, String email) {
+        JoinRequest request = getJoinRequestByIdAndStatusWaiting(joinRequestId);
+
+        User currentUser = getUserByEmail(email);
+
+        validateAdminRole(request.getClub(), currentUser);
 
         request.rejectRequest();
 
         joinRequestRepo.save(request);
     }
 
-    private ClubUser.Role getClubUserRole(Club club, User user) {
-        return clubUserRepo.findByClubAndUserAndDeleted(club, user, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND))
-                .getRole();
+    private User getUserByEmail(String email) {
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private Club getClubByInvitationCodeAndDeletedFalse(String invitationCode) {
+        return clubRepo.findByInvitationInvitationCodeAndDeletedFalse(invitationCode)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+    }
+
+    private Club getClubByIdAndDeletedFalse(Long clubId) {
+        return clubRepo.findByIdAndDeletedFalse(clubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+    }
+
+    private void validateAdminRole(Club club, User user) {
+        if (club.getUserRole(user) != ClubUser.Role.ADMIN) {
+            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
+        }
+    }
+
+    private JoinRequest getJoinRequestByIdAndStatusWaiting(Long joinRequestId) {
+        return joinRequestRepo.findByIdAndStatus(joinRequestId, JoinRequest.Status.WAITING)
+                .orElseThrow(() -> new CustomException(ErrorCode.JOIN_REQUEST_NOT_FOUND));
+    }
+
+    private void validateUserAndRequestNotExist(Club club, User user) {
+        boolean isUserInClub = clubUserRepo.existsByClubAndUserAndDeletedFalse(club, user);
+        boolean isRequestExist = joinRequestRepo.existsByClubAndUserAndStatus(club, user, JoinRequest.Status.WAITING);
+
+        if (isUserInClub) {
+            throw new CustomException(ErrorCode.CLUB_USER_ALREADY_EXIST);
+        }
+
+        if (isRequestExist) {
+            throw new CustomException(ErrorCode.JOIN_REQUEST_ALREADY_EXIST);
+        }
     }
 
 }

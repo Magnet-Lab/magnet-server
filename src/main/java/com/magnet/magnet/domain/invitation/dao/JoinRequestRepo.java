@@ -12,6 +12,8 @@ public interface JoinRequestRepo extends JpaRepository<JoinRequest, Long> {
 
     List<JoinRequest> findAllByClubAndStatus(Club club, JoinRequest.Status status);
 
-    Optional<JoinRequest> findByClubAndUserAndStatus(Club club, User user, JoinRequest.Status status);
+    Optional<JoinRequest> findByIdAndStatus(Long id, JoinRequest.Status status);
+
+    boolean existsByClubAndUserAndStatus(Club club, User user, JoinRequest.Status status);
 
 }

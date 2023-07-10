@@ -10,8 +10,8 @@ public interface JoinRequestService {
 
     List<ResponseJoinRequest> getJoinRequestList(Long clubId, String email);
 
-    void acceptJoinRequest(Long joinRequestId);
+    void acceptJoinRequest(Long joinRequestId, String email);
 
-    void rejectJoinRequest(Long joinRequestId);
+    void rejectJoinRequest(Long joinRequestId, String email);
 
 }

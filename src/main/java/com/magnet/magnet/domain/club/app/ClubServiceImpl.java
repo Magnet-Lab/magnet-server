@@ -11,6 +11,8 @@ import com.magnet.magnet.domain.invitation.dao.InvitationRepo;
 import com.magnet.magnet.domain.invitation.dao.JoinRequestRepo;
 import com.magnet.magnet.domain.invitation.domain.Invitation;
 import com.magnet.magnet.domain.invitation.domain.JoinRequest;
+import com.magnet.magnet.domain.post.category.dao.CategoryRepo;
+import com.magnet.magnet.domain.post.category.domain.Category;
 import com.magnet.magnet.domain.user.dao.UserRepo;
 import com.magnet.magnet.domain.user.domain.User;
 import com.magnet.magnet.global.exception.CustomException;
@@ -36,50 +38,46 @@ public class ClubServiceImpl implements ClubService {
 
     private final JoinRequestRepo joinRequestRepo;
 
+    private final CategoryRepo categoryRepo;
+
     @Override
     @Transactional
     public ResponseClub createClub(RequestCreateClub dto, String email) {
+        User currentUser = getUserByEmail(email);
 
-        // TODO: 생성하려는 유저가 가입한 동아리가 3개 이하인지 체크\
+        // 생성하려는 유저가 가입한 동아리가 5개 이하인지 체크
+        validateActiveClubUserCountForUser(currentUser);
 
         // 동아리 초대 코드 중복 체크 및 생성
-        Invitation savedInvitation;
-        while (true) {
-            String invitationCode = UUID.randomUUID().toString().substring(0, 8);
-            if (invitationRepo.findByInvitationCode(invitationCode).isEmpty()) {
-                savedInvitation = invitationRepo.save(Invitation.builder()
-                        .invitationCode(invitationCode)
-                        .build());
-                break;
-            }
-        }
+        Invitation createInvitation = invitationRepo.save(Invitation.builder()
+                .invitationCode(generateUniqueInvitationCode())
+                .build());
 
         // 동아리 생성
         Club createClub = clubRepo.save(Club.builder()
                         .title(dto.getTitle())
                         .description(dto.getDescription())
-                        .invitation(savedInvitation)
+                        .invitation(createInvitation)
                         .deleted(false)
                         .build());
 
-        // 로그인 된 유저 찾기
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        // 동아리 내 기본 카테고리인 공지사항 생성
+        categoryRepo.save(Category.builder()
+                        .club(createClub)
+                        .title("공지사항")
+                        .description("공지사항입니다.")
+                        .build());
 
         // 관계 생성
-        clubUserRepo.save(ClubUser.builder()
-                .club(createClub)
-                .user(user)
-                .role(ClubUser.Role.ADMIN) // 동아리 생성한 유저는 관리자
-                .deleted(false)
-                .build());
+        createAdminClubUser(createClub, currentUser);
 
         // 생성한 동아리 정보 반환
         return ResponseClub.builder()
                 .id(createClub.getId())
                 .title(createClub.getTitle())
                 .description(createClub.getDescription())
-                .inviteCode(createClub.getInvitation().getInvitationCode())
+                .invitationCode(createClub.getInvitation().getInvitationCode())
+                .myRole(String.valueOf(ClubUser.Role.ADMIN))
                 .createdDate(createClub.getCreatedDate())
                 .modifiedDate(createClub.getModifiedDate())
                 .build();
@@ -88,18 +86,12 @@ public class ClubServiceImpl implements ClubService {
     @Override
     @Transactional
     public ResponseClub updateClub(Long clubId, RequestUpdateClub dto, String email) {
-        // 동아리 찾기
-        Club findClub = clubRepo.findByIdAndDeleted(clubId, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+        Club findClub = getClubByIdAndDeletedFalse(clubId);
 
-        // 로그인 된 유저 찾기
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User currentUser = getUserByEmail(email);
 
         // 관리자가 아닌 경우 예외 처리
-        if (getClubUserRole(findClub, user) != ClubUser.Role.ADMIN) {
-            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
-        }
+        validateAdminRole(findClub, currentUser);
 
         // 동아리 수정 및 저장
         findClub.updateClub(dto.getTitle(), dto.getDescription());
@@ -110,7 +102,8 @@ public class ClubServiceImpl implements ClubService {
                 .id(updateClub.getId())
                 .title(updateClub.getTitle())
                 .description(updateClub.getDescription())
-                .inviteCode(updateClub.getInvitation().getInvitationCode())
+                .invitationCode(updateClub.getInvitation().getInvitationCode())
+                .myRole(String.valueOf(ClubUser.Role.ADMIN))
                 .createdDate(updateClub.getCreatedDate())
                 .modifiedDate(updateClub.getModifiedDate())
                 .build();
@@ -119,43 +112,30 @@ public class ClubServiceImpl implements ClubService {
     @Override
     @Transactional
     public ResponseClub deleteClub(Long clubId, String email) {
-        // 동아리 찾기
-        Club findClub = clubRepo.findByIdAndDeleted(clubId, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+        Club findClub = getClubByIdAndDeletedFalse(clubId);
 
-        // 로그인 된 유저 찾기
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User currentUser = getUserByEmail(email);
 
         // 관리자가 아닌 경우 예외 처리
-        if (getClubUserRole(findClub, user) != ClubUser.Role.ADMIN) {
-            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
-        }
+        validateAdminRole(findClub, currentUser);
 
         // 동아리 삭제 처리 및 저장
         findClub.deleteClub();
         Club deletedClub = clubRepo.save(findClub);
 
         // 관계 삭제 처리 및 저장
-        List<ClubUser> clubUserList = clubUserRepo.findAllByClubAndDeleted(findClub, false);
-        for (ClubUser clubUser : clubUserList) {
-            clubUser.deleteClubUser();
-            clubUserRepo.save(clubUser);
-        }
+        deleteClubUsers(findClub);
 
         // 가입 요청 리젝 처리 및 저장
-        List<JoinRequest> joinRequestList = joinRequestRepo.findAllByClubAndStatus(findClub, JoinRequest.Status.WAITING);
-        for (JoinRequest joinRequest : joinRequestList) {
-            joinRequest.rejectRequest();
-            joinRequestRepo.save(joinRequest);
-        }
+        rejectJoinRequests(findClub);
 
         // 삭제한 동아리 정보 반환
         return ResponseClub.builder()
                 .id(deletedClub.getId())
                 .title(deletedClub.getTitle())
                 .description(deletedClub.getDescription())
-                .inviteCode(deletedClub.getInvitation().getInvitationCode())
+                .invitationCode(deletedClub.getInvitation().getInvitationCode())
+                .myRole(String.valueOf(ClubUser.Role.ADMIN))
                 .createdDate(deletedClub.getCreatedDate())
                 .modifiedDate(deletedClub.getModifiedDate())
                 .build();
@@ -164,49 +144,90 @@ public class ClubServiceImpl implements ClubService {
     @Override
     @Transactional
     public ResponseClub getClub(Long clubId) {
-        // 동아리 찾기
-        Club club = clubRepo.findByIdAndDeleted(clubId, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+        Club findClub = getClubByIdAndDeletedFalse(clubId);
 
         // 동아리 정보 반환
         return ResponseClub.builder()
-                .id(club.getId())
-                .title(club.getTitle())
-                .description(club.getDescription())
-                .inviteCode(club.getInvitation().getInvitationCode())
-                .createdDate(club.getCreatedDate())
-                .modifiedDate(club.getModifiedDate())
+                .id(findClub.getId())
+                .title(findClub.getTitle())
+                .description(findClub.getDescription())
+                .invitationCode(findClub.getInvitation().getInvitationCode())
+                .createdDate(findClub.getCreatedDate())
+                .modifiedDate(findClub.getModifiedDate())
                 .build();
     }
 
     @Override
     @Transactional
     public List<ResponseClub> getMyClubList(String email) {
-        // 로그인 된 유저 찾기
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User currentUser = getUserByEmail(email);
 
         // 유저가 속한 동아리 목록 찾기
-        List<ClubUser> clubUserList = clubUserRepo.findByUserAndDeleted(user, false);
+        List<ClubUser> userClubList = clubUserRepo.findAllByUserAndDeletedFalse(currentUser);
 
         // 동아리 목록 List<ResponseClub> 형태로 반환
-        return clubUserList.stream()
+        return userClubList.stream()
                 .map(clubUser -> ResponseClub.builder()
                         .id(clubUser.getClub().getId())
                         .title(clubUser.getClub().getTitle())
                         .description(clubUser.getClub().getDescription())
-                        .inviteCode(clubUser.getClub().getInvitation().getInvitationCode())
+                        .invitationCode(clubUser.getClub().getInvitation().getInvitationCode())
+                        .myRole(String.valueOf(clubUser.getRole()))
                         .createdDate(clubUser.getClub().getCreatedDate())
                         .modifiedDate(clubUser.getClub().getModifiedDate())
                         .build())
                 .toList();
     }
 
-    // 동아리와 유저, 관계를 찾고 관계의 role 반환하는 메소드
-    private ClubUser.Role getClubUserRole(Club club, User user) {
-        return clubUserRepo.findByClubAndUserAndDeleted(club, user, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND))
-                .getRole();
+    private String generateUniqueInvitationCode() {
+        String invitationCode;
+        do {
+            invitationCode = UUID.randomUUID().toString().substring(0, 8);
+        } while (invitationRepo.findByInvitationCode(invitationCode).isPresent());
+        return invitationCode;
+    }
+
+    private User getUserByEmail(String email) {
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private Club getClubByIdAndDeletedFalse(Long clubId) {
+        return clubRepo.findByIdAndDeletedFalse(clubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+    }
+
+    private void validateAdminRole(Club club, User user) {
+        if (club.getUserRole(user) != ClubUser.Role.ADMIN) {
+            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
+        }
+    }
+
+    private void validateActiveClubUserCountForUser(User user) {
+        if (clubUserRepo.countByUserAndDeletedFalse(user) >= 5) {
+            throw new CustomException(ErrorCode.CLUB_LIMIT_EXCEED);
+        }
+    }
+
+    private void deleteClubUsers(Club club) {
+        List<ClubUser> clubUsers = clubUserRepo.findAllByClubAndDeletedFalse(club);
+        clubUsers.forEach(ClubUser::deleteClubUser);
+        clubUserRepo.saveAll(clubUsers);
+    }
+
+    private void rejectJoinRequests(Club club) {
+        List<JoinRequest> joinRequests = joinRequestRepo.findAllByClubAndStatus(club, JoinRequest.Status.WAITING);
+        joinRequests.forEach(JoinRequest::rejectRequest);
+        joinRequestRepo.saveAll(joinRequests);
+    }
+
+    private void createAdminClubUser(Club club, User user) {
+        clubUserRepo.save(ClubUser.builder()
+                .club(club)
+                .user(user)
+                .role(ClubUser.Role.ADMIN)
+                .deleted(false)
+                .build());
     }
 
 }

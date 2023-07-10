@@ -1,6 +1,5 @@
 package com.magnet.magnet.domain.invitation.domain;
 
-import com.magnet.magnet.domain.club.domain.Club;
 import com.magnet.magnet.global.common.BaseTime;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -7,8 +7,8 @@ import java.util.Optional;
 
 public interface ClubRepo extends JpaRepository<Club, Long> {
 
-    Optional<Club> findByIdAndDeleted(Long id, boolean deleted);
+    Optional<Club> findByIdAndDeletedFalse(Long id);
 
-    Optional<Club> findByInvitationInvitationCode(String invitationCode);
+    Optional<Club> findByInvitationInvitationCodeAndDeletedFalse(String invitationCode);
 
 }

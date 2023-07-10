@@ -21,7 +21,10 @@ public class ResponseClub {
     private String description;
 
     @Schema(description = "동아리 초대 코드")
-    private String inviteCode;
+    private String invitationCode;
+
+    @Schema(description = "동아리내 나의 역할")
+    private String myRole;
 
     @Schema(description = "동아리 생성일")
     private LocalDateTime createdDate;

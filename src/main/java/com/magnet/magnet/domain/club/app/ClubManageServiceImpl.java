@@ -24,25 +24,18 @@ public class ClubManageServiceImpl implements ClubManageService {
 
     @Override
     public void setUserAsAdmin(RequestManagement dto, String email) {
-        Club findClub = clubRepo.findById(dto.getClubId())
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+        Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
 
-        // 로그인 된 유저 찾기
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User currentUser = getUserByEmail(email);
 
         // 관리자가 아닌 경우 예외 처리
-        if (getClubUserRole(findClub, user) != ClubUser.Role.ADMIN) {
-            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
-        }
+        validateAdminRole(findClub, currentUser);
 
         // 관리자로 만들려는 유저 찾기
-        User findUser = userRepo.findById(dto.getUserId())
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User findUser = getUserById(dto.getUserId());
 
         // 관계 찾기
-        ClubUser findClubUser = clubUserRepo.findByClubAndUserAndDeleted(findClub, findUser, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND));
+        ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, findUser);
 
         findClubUser.updateRoleToAdmin();
         clubUserRepo.save(findClubUser);
@@ -50,23 +43,15 @@ public class ClubManageServiceImpl implements ClubManageService {
 
     @Override
     public void setUserAsUser(RequestManagement dto, String email) {
-        Club findClub = clubRepo.findById(dto.getClubId())
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+        Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
 
-        // 로그인 된 유저 찾기
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User currentUser = getUserByEmail(email);
 
-        // 관리자가 아닌 경우 예외 처리
-        if (getClubUserRole(findClub, user) != ClubUser.Role.ADMIN) {
-            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
-        }
+        validateAdminRole(findClub, currentUser);
 
-        User findUser = userRepo.findById(dto.getUserId())
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User findUser = getUserById(dto.getUserId());
 
-        ClubUser findClubUser = clubUserRepo.findByClubAndUserAndDeleted(findClub, findUser, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND));
+        ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, findUser);
 
         findClubUser.updateRoleToUser();
         clubUserRepo.save(findClubUser);
@@ -74,34 +59,44 @@ public class ClubManageServiceImpl implements ClubManageService {
 
     @Override
     public void deleteUser(RequestManagement dto, String email) {
-        Club findClub = clubRepo.findById(dto.getClubId())
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+        Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
 
-        // 로그인 된 유저 찾기
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User currentUser = getUserByEmail(email);
 
-        // 관리자가 아닌 경우 예외 처리
-        if (getClubUserRole(findClub, user) != ClubUser.Role.ADMIN) {
-            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
-        }
+        validateAdminRole(findClub, currentUser);
 
-        User findUser = userRepo.findById(dto.getUserId())
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User findUser = getUserById(dto.getUserId());
 
-        ClubUser findClubUser = clubUserRepo.findByClubAndUserAndDeleted(findClub, findUser, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND));
+        ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, findUser);
 
         findClubUser.deleteClubUser();
         clubUserRepo.save(findClubUser);
     }
 
-    // 동아리와 유저, 관계를 찾고 관계의 role 반환하는 메소드
-    private ClubUser.Role getClubUserRole(Club club, User user) {
-        return clubUserRepo.findByClubAndUserAndDeleted(club, user, false)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND))
-                .getRole();
+    private User getUserByEmail(String email) {
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
+    private User getUserById(Long id) {
+        return userRepo.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private Club getClubByIdAndDeletedFalse(Long clubId) {
+        return clubRepo.findByIdAndDeletedFalse(clubId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+    }
+
+    private ClubUser getClubUserByClubAndUserAndDeletedFalse(Club club, User user) {
+        return clubUserRepo.findByClubAndUserAndDeletedFalse(club, user)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND));
+    }
+
+    private void validateAdminRole(Club club, User user) {
+        if (club.getUserRole(user) != ClubUser.Role.ADMIN) {
+            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
+        }
+    }
 
 }

@@ -10,10 +10,14 @@ import java.util.Optional;
 
 public interface ClubUserRepo extends JpaRepository<ClubUser, Long> {
 
-    Optional<ClubUser> findByClubAndUserAndDeleted(Club club, User user, boolean deleted);
+    Optional<ClubUser> findByClubAndUserAndDeletedFalse(Club club, User user);
 
-    List<ClubUser> findByUserAndDeleted(User user, boolean deleted);
+    List<ClubUser> findAllByUserAndDeletedFalse(User user);
 
-    List<ClubUser> findAllByClubAndDeleted(Club club, boolean deleted);
+    List<ClubUser> findAllByClubAndDeletedFalse(Club club);
+
+    boolean existsByClubAndUserAndDeletedFalse(Club club, User user);
+
+    int countByUserAndDeletedFalse(User user);
 
 }

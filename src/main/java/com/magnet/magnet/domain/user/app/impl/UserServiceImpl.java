@@ -1,5 +1,6 @@
-package com.magnet.magnet.domain.user.app;
+package com.magnet.magnet.domain.user.app.impl;
 
+import com.magnet.magnet.domain.user.app.UserService;
 import com.magnet.magnet.domain.user.dao.UserRepo;
 import com.magnet.magnet.domain.user.domain.User;
 import com.magnet.magnet.domain.user.dto.response.ResponseUser;
@@ -20,8 +21,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public ResponseUser myInfo(Principal principal) {
-        User user = userRepo.findByEmail(principal.getName())
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        User user = getUserByEmail(principal.getName());
 
         return ResponseUser.builder()
                 .id(user.getId())
@@ -31,4 +31,10 @@ public class UserServiceImpl implements UserService {
                 .uid(user.getUid())
                 .build();
     }
+
+    private User getUserByEmail(String email) {
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
 }

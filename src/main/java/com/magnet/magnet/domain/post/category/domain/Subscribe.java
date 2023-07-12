@@ -1,5 +1,6 @@
 package com.magnet.magnet.domain.post.category.domain;
 
+import com.magnet.magnet.domain.invitation.domain.JoinRequest;
 import com.magnet.magnet.domain.user.domain.User;
 import com.magnet.magnet.global.common.BaseTime;
 import jakarta.persistence.*;
@@ -27,11 +28,16 @@ public class Subscribe extends BaseTime {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Enumerated(EnumType.STRING)
     @Builder.Default
-    private boolean deleted = false;
+    private Subscribe.Status status = Subscribe.Status.SUBSCRIBE;
+
+    public enum Status {
+        SUBSCRIBE, UNSUBSCRIBE
+    }
 
     public void unSubscribe() {
-        this.deleted = true;
+        this.status = Status.UNSUBSCRIBE;
     }
 
 }

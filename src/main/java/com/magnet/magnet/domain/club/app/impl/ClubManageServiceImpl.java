@@ -1,5 +1,6 @@
-package com.magnet.magnet.domain.club.app;
+package com.magnet.magnet.domain.club.app.impl;
 
+import com.magnet.magnet.domain.club.app.ClubManageService;
 import com.magnet.magnet.domain.club.dao.ClubRepo;
 import com.magnet.magnet.domain.club.dao.ClubUserRepo;
 import com.magnet.magnet.domain.club.domain.Club;

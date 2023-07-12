@@ -1,9 +1,10 @@
-package com.magnet.magnet.domain.invitation.app;
+package com.magnet.magnet.domain.invitation.app.impl;
 
 import com.magnet.magnet.domain.club.dao.ClubRepo;
 import com.magnet.magnet.domain.club.dao.ClubUserRepo;
 import com.magnet.magnet.domain.club.domain.Club;
 import com.magnet.magnet.domain.club.domain.ClubUser;
+import com.magnet.magnet.domain.invitation.app.JoinRequestService;
 import com.magnet.magnet.domain.invitation.dao.JoinRequestRepo;
 import com.magnet.magnet.domain.invitation.domain.JoinRequest;
 import com.magnet.magnet.domain.invitation.dto.response.ResponseJoinRequest;

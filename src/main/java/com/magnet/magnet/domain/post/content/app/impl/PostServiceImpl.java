@@ -1,8 +1,9 @@
-package com.magnet.magnet.domain.post.content.app;
+package com.magnet.magnet.domain.post.content.app.impl;
 
 import com.magnet.magnet.domain.club.dao.ClubRepo;
 import com.magnet.magnet.domain.club.domain.Club;
 import com.magnet.magnet.domain.club.domain.ClubUser;
+import com.magnet.magnet.domain.post.content.app.PostService;
 import com.magnet.magnet.domain.post.content.dao.PostRepo;
 import com.magnet.magnet.domain.post.content.domain.Post;
 import com.magnet.magnet.domain.post.content.dto.request.RequestCreatePost;

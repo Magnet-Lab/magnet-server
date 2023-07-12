@@ -1,8 +1,9 @@
-package com.magnet.magnet.domain.post.category.app;
+package com.magnet.magnet.domain.post.category.app.impl;
 
 import com.magnet.magnet.domain.club.dao.ClubRepo;
 import com.magnet.magnet.domain.club.domain.Club;
 import com.magnet.magnet.domain.club.domain.ClubUser;
+import com.magnet.magnet.domain.post.category.app.CategoryService;
 import com.magnet.magnet.domain.post.category.dao.CategoryRepo;
 import com.magnet.magnet.domain.post.category.domain.Category;
 import com.magnet.magnet.domain.post.category.dto.request.RequestCreateCategory;

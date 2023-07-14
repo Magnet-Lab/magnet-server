@@ -153,6 +153,7 @@ public class ClubServiceImpl implements ClubService {
                 .title(findClub.getTitle())
                 .description(findClub.getDescription())
                 .invitationCode(findClub.getInvitation().getInvitationCode())
+                .myRole(String.valueOf(ClubUser.Role.ADMIN))
                 .createdDate(findClub.getCreatedDate())
                 .modifiedDate(findClub.getModifiedDate())
                 .build();

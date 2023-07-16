@@ -54,9 +54,8 @@ public class CategoryServiceImpl implements CategoryService {
 
         validateAdminRole(findCategory.getClub(), currentUser);
 
-        findCategory.updateTitle(dto.getCategoryTitle());
-        findCategory.updateDescription(dto.getCategoryDescription());
-        categoryRepo.save(findCategory);
+        findCategory.updateCategoryTitle(dto.getCategoryTitle());
+        findCategory.updateCategoryDescription(dto.getCategoryDescription());
     }
 
 
@@ -72,7 +71,6 @@ public class CategoryServiceImpl implements CategoryService {
         validateAdminRole(findCategory.getClub(), currentUser);
 
         findCategory.deleteCategory();
-        categoryRepo.save(findCategory);
     }
 
     @Override

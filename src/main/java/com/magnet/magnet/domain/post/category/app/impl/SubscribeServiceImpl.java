@@ -48,7 +48,6 @@ public class SubscribeServiceImpl implements SubscribeService {
         Subscribe findSubscribe = getSubscribeByIdAndStatus(categoryId, Subscribe.Status.SUBSCRIBE);
 
         findSubscribe.unSubscribe();
-        subscribeRepo.save(findSubscribe);
     }
 
     @Override

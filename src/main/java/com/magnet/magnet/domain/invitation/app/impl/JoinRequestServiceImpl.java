@@ -86,8 +86,6 @@ public class JoinRequestServiceImpl implements JoinRequestService {
                 .user(findRequest.getUser())
                 .role(ClubUser.Role.USER)
                 .build());
-
-        joinRequestRepo.save(findRequest);
     }
 
     @Override
@@ -100,8 +98,6 @@ public class JoinRequestServiceImpl implements JoinRequestService {
         validateAdminRole(request.getClub(), currentUser);
 
         request.rejectRequest();
-
-        joinRequestRepo.save(request);
     }
 
     private User getUserByEmail(String email) {

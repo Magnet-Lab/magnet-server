@@ -70,8 +70,8 @@ public class ClubController {
                     @ApiResponse(responseCode = "403", description = "인증 오류 (토큰)"),
                     @ApiResponse(responseCode = "500", description = "관리자 문의")
             })
-    public ResponseEntity<ResponseClub> getClub(@PathVariable("clubId") Long id) {
-        return ResponseEntity.ok(clubService.getClub(id));
+    public ResponseEntity<ResponseClub> getClub(@PathVariable("clubId") Long id, Principal principal) {
+        return ResponseEntity.ok(clubService.getClub(id, principal.getName()));
     }
 
     @GetMapping("/myClub")

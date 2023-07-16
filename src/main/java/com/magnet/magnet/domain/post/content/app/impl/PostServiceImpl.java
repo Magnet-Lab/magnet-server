@@ -76,21 +76,19 @@ public class PostServiceImpl implements PostService {
 
         Post findPost = getPostByIdAndDeletedFalse(dto.getPostId());
 
-        findPost.updateTitle(dto.getTitle());
-        findPost.updateContent(dto.getContent());
-        findPost.updateCategory(getCategoryByTitleAndClubAndDeletedFalse(dto.getCategoryTitle(), findClub));
-
-        Post updatePost = postRepo.save(findPost);
+        findPost.updatePostTitle(dto.getTitle());
+        findPost.updatePostContent(dto.getContent());
+        findPost.updatePostCategory(getCategoryByTitleAndClubAndDeletedFalse(dto.getCategoryTitle(), findClub));
 
         return ResponsePost.builder()
-                .id(updatePost.getId())
-                .title(updatePost.getTitle())
-                .content(updatePost.getContent())
-                .writer(updatePost.getWriter().getNickname())
-                .categoryTitle(updatePost.getCategory().getTitle())
-                .location(updatePost.getLocation())
-                .createdDate(updatePost.getCreatedDate())
-                .modifiedDate(updatePost.getModifiedDate())
+                .id(findPost.getId())
+                .title(findPost.getTitle())
+                .content(findPost.getContent())
+                .writer(findPost.getWriter().getNickname())
+                .categoryTitle(findPost.getCategory().getTitle())
+                .location(findPost.getLocation())
+                .createdDate(findPost.getCreatedDate())
+                .modifiedDate(findPost.getModifiedDate())
                 .build();
     }
 
@@ -106,7 +104,6 @@ public class PostServiceImpl implements PostService {
         Post findPost = getPostByIdAndDeletedFalse(postId);
 
         findPost.deletePost();
-        postRepo.save(findPost);
 
         return ResponsePost.builder()
                 .id(findPost.getId())

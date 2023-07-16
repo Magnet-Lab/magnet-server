@@ -94,19 +94,18 @@ public class ClubServiceImpl implements ClubService {
         // 관리자가 아닌 경우 예외 처리
         validateAdminRole(findClub, currentUser);
 
-        // 동아리 수정 및 저장
-        findClub.updateClub(dto.getTitle(), dto.getDescription());
-        Club updateClub = clubRepo.save(findClub);
+        // 동아리 정보 업데이트
+        findClub.updateClubTitle(dto.getTitle());
+        findClub.updateClubDescription(dto.getDescription());
 
-        // 수정한 동아리 정보 반환
         return ResponseClub.builder()
-                .id(updateClub.getId())
-                .title(updateClub.getTitle())
-                .description(updateClub.getDescription())
-                .invitationCode(updateClub.getInvitation().getInvitationCode())
+                .id(findClub.getId())
+                .title(findClub.getTitle())
+                .description(findClub.getDescription())
+                .invitationCode(findClub.getInvitation().getInvitationCode())
                 .myRole(String.valueOf(ClubUser.Role.ADMIN))
-                .createdDate(updateClub.getCreatedDate())
-                .modifiedDate(updateClub.getModifiedDate())
+                .createdDate(findClub.getCreatedDate())
+                .modifiedDate(findClub.getModifiedDate())
                 .build();
     }
 
@@ -120,40 +119,39 @@ public class ClubServiceImpl implements ClubService {
         // 관리자가 아닌 경우 예외 처리
         validateAdminRole(findClub, currentUser);
 
-        // 동아리 삭제 처리 및 저장
+        // 동아리 삭제 처리
         findClub.deleteClub();
-        Club deletedClub = clubRepo.save(findClub);
 
-        // 관계 삭제 처리 및 저장
+        // 관계 삭제 처리
         deleteClubUsers(findClub);
 
-        // 가입 요청 리젝 처리 및 저장
+        // 가입 요청 리젝 처리
         rejectJoinRequests(findClub);
 
-        // 삭제한 동아리 정보 반환
-        return ResponseClub.builder()
-                .id(deletedClub.getId())
-                .title(deletedClub.getTitle())
-                .description(deletedClub.getDescription())
-                .invitationCode(deletedClub.getInvitation().getInvitationCode())
-                .myRole(String.valueOf(ClubUser.Role.ADMIN))
-                .createdDate(deletedClub.getCreatedDate())
-                .modifiedDate(deletedClub.getModifiedDate())
-                .build();
-    }
-
-    @Override
-    @Transactional
-    public ResponseClub getClub(Long clubId) {
-        Club findClub = getClubByIdAndDeletedFalse(clubId);
-
-        // 동아리 정보 반환
         return ResponseClub.builder()
                 .id(findClub.getId())
                 .title(findClub.getTitle())
                 .description(findClub.getDescription())
                 .invitationCode(findClub.getInvitation().getInvitationCode())
                 .myRole(String.valueOf(ClubUser.Role.ADMIN))
+                .createdDate(findClub.getCreatedDate())
+                .modifiedDate(findClub.getModifiedDate())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ResponseClub getClub(Long clubId, String email) {
+        Club findClub = getClubByIdAndDeletedFalse(clubId);
+
+        String myRole = getMyRoleByClubAndUser(findClub, getUserByEmail(email));
+
+        return ResponseClub.builder()
+                .id(findClub.getId())
+                .title(findClub.getTitle())
+                .description(findClub.getDescription())
+                .invitationCode(findClub.getInvitation().getInvitationCode())
+                .myRole(myRole)
                 .createdDate(findClub.getCreatedDate())
                 .modifiedDate(findClub.getModifiedDate())
                 .build();
@@ -209,6 +207,12 @@ public class ClubServiceImpl implements ClubService {
         if (clubUserRepo.countByUserAndDeletedFalse(user) >= 5) {
             throw new CustomException(ErrorCode.CLUB_LIMIT_EXCEED);
         }
+    }
+
+    private String getMyRoleByClubAndUser(Club club, User user) {
+        return clubUserRepo.findByClubAndUserAndDeletedFalse(club, user)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND))
+                .getRole().toString();
     }
 
     private void deleteClubUsers(Club club) {

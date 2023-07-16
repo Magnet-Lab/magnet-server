@@ -12,6 +12,7 @@ import com.magnet.magnet.global.exception.CustomException;
 import com.magnet.magnet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class ClubManageServiceImpl implements ClubManageService {
     private final ClubUserRepo clubUserRepo;
 
     @Override
+    @Transactional
     public void setUserAsAdmin(RequestManagement dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
 
@@ -39,10 +41,10 @@ public class ClubManageServiceImpl implements ClubManageService {
         ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, findUser);
 
         findClubUser.updateRoleToAdmin();
-        clubUserRepo.save(findClubUser);
     }
 
     @Override
+    @Transactional
     public void setUserAsUser(RequestManagement dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
 
@@ -55,10 +57,10 @@ public class ClubManageServiceImpl implements ClubManageService {
         ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, findUser);
 
         findClubUser.updateRoleToUser();
-        clubUserRepo.save(findClubUser);
     }
 
     @Override
+    @Transactional
     public void deleteUser(RequestManagement dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
 
@@ -71,7 +73,6 @@ public class ClubManageServiceImpl implements ClubManageService {
         ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, findUser);
 
         findClubUser.deleteClubUser();
-        clubUserRepo.save(findClubUser);
     }
 
     private User getUserByEmail(String email) {

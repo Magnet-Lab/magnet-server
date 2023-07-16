@@ -14,8 +14,8 @@ public interface ClubService {
 
     ResponseClub deleteClub(Long id, String email);
 
-    ResponseClub getClub(Long id);
+    ResponseClub getClub(Long id, String email);
 
-    List<ResponseClub> getMyClubList( String email);
+    List<ResponseClub> getMyClubList(String email);
 
 }

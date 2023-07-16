@@ -42,15 +42,15 @@ public class Post extends BaseTime {
     @Builder.Default
     private boolean deleted = false;
 
-    public void updateTitle(String newTitle) {
+    public void updatePostTitle(String newTitle) {
         this.title = newTitle;
     }
 
-    public void updateContent(String newContent) {
+    public void updatePostContent(String newContent) {
         this.content = newContent;
     }
 
-    public void updateCategory(Category newCategory) {
+    public void updatePostCategory(Category newCategory) {
         this.category = newCategory;
     }
 

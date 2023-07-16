@@ -30,11 +30,11 @@ public class Category extends BaseTime {
     @Builder.Default
     private boolean deleted = false;
 
-    public void updateTitle(String newTitle) {
+    public void updateCategoryTitle(String newTitle) {
         this.title = newTitle;
     }
 
-    public void updateDescription(String newDescription) {
+    public void updateCategoryDescription(String newDescription) {
         this.description = newDescription;
     }
 

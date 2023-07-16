@@ -38,8 +38,11 @@ public class Club extends BaseTime {
     @Builder.Default
     private boolean deleted = false;
 
-    public void updateClub(String newTitle, String newDescription) {
+    public void updateClubTitle(String newTitle) {
         this.title = newTitle;
+    }
+
+    public void updateClubDescription(String newDescription) {
         this.description = newDescription;
     }
 

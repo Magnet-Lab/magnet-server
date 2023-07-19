@@ -67,6 +67,7 @@ public class ClubServiceImpl implements ClubService {
                         .club(createClub)
                         .title("공지사항")
                         .description("공지사항입니다.")
+                        .permissionRange(Category.Role.ADMIN)
                         .build());
 
         // 관계 생성
@@ -88,13 +89,11 @@ public class ClubServiceImpl implements ClubService {
     @Transactional
     public ResponseClub updateClub(Long clubId, RequestUpdateClub dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(clubId);
-
         User currentUser = getUserByEmail(email);
 
         // 관리자가 아닌 경우 예외 처리
         validateAdminRole(findClub, currentUser);
 
-        // 동아리 정보 업데이트
         findClub.updateClubTitle(dto.getTitle());
         findClub.updateClubDescription(dto.getDescription());
 
@@ -113,13 +112,10 @@ public class ClubServiceImpl implements ClubService {
     @Transactional
     public ResponseClub deleteClub(Long clubId, String email) {
         Club findClub = getClubByIdAndDeletedFalse(clubId);
-
         User currentUser = getUserByEmail(email);
 
-        // 관리자가 아닌 경우 예외 처리
         validateAdminRole(findClub, currentUser);
 
-        // 동아리 삭제 처리
         findClub.deleteClub();
 
         // 관계 삭제 처리
@@ -143,8 +139,9 @@ public class ClubServiceImpl implements ClubService {
     @Transactional
     public ResponseClub getClub(Long clubId, String email) {
         Club findClub = getClubByIdAndDeletedFalse(clubId);
+        User findUser = getUserByEmail(email);
 
-        String myRole = getMyRoleByClubAndUser(findClub, getUserByEmail(email));
+        String myRole = getMyRoleByClubAndUser(findClub, findUser);
 
         return ResponseClub.builder()
                 .id(findClub.getId())
@@ -162,7 +159,6 @@ public class ClubServiceImpl implements ClubService {
     public List<ResponseClub> getMyClubList(String email) {
         User currentUser = getUserByEmail(email);
 
-        // 유저가 속한 동아리 목록 찾기
         List<ClubUser> userClubList = clubUserRepo.findAllByUserAndDeletedFalse(currentUser);
 
         // 동아리 목록 List<ResponseClub> 형태로 반환

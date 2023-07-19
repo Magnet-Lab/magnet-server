@@ -37,17 +37,18 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public ResponsePost createPost(RequestCreatePost dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
+        Category findCategory = getCategoryByTitleAndClubAndDeletedFalse(dto.getCategoryTitle(), findClub);
 
         User currentUser = getUserByEmail(email);
 
-        validateAdminRole(findClub, currentUser);
+        validateAccessPermission(findCategory, getUserRoleInClub(findClub, currentUser));
 
         Post createPost = postRepo.save(Post.builder()
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .club(findClub)
                 .writer(currentUser)
-                .category(getCategoryByTitleAndClubAndDeletedFalse(dto.getCategoryTitle(), findClub))
+                .category(findCategory)
                 .location(dto.getLocation())
                 .build());
 
@@ -69,16 +70,16 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public ResponsePost updatePost(RequestUpdatePost dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
-
         User currentUser = getUserByEmail(email);
 
-        validateAdminRole(findClub, currentUser);
+        validatePostOwnership(dto.getPostId(), currentUser);
 
         Post findPost = getPostByIdAndDeletedFalse(dto.getPostId());
 
         findPost.updatePostTitle(dto.getTitle());
         findPost.updatePostContent(dto.getContent());
         findPost.updatePostCategory(getCategoryByTitleAndClubAndDeletedFalse(dto.getCategoryTitle(), findClub));
+        findPost.updatePostLocation(dto.getLocation());
 
         return ResponsePost.builder()
                 .id(findPost.getId())
@@ -96,10 +97,11 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public ResponsePost deletePost(Long clubId, Long postId, String email) {
         Club findClub = getClubByIdAndDeletedFalse(clubId);
-
         User currentUser = getUserByEmail(email);
 
-        validateAdminRole(findClub, currentUser);
+        if (findClub.getUserRole(currentUser) != ClubUser.Role.ADMIN) {
+            validatePostOwnership(postId, currentUser);
+        }
 
         Post findPost = getPostByIdAndDeletedFalse(postId);
 
@@ -156,7 +158,6 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public Page<ResponsePost> getPostListByCategoryTitle(Long clubId, String categoryTitle, Pageable pageable) {
         Club findClub = getClubByIdAndDeletedFalse(clubId);
-
         Category findCategory = getCategoryByTitleAndClubAndDeletedFalse(categoryTitle, findClub);
 
         return postRepo.findAllByClubAndCategoryAndDeletedFalse(findClub, findCategory, pageable)
@@ -171,7 +172,6 @@ public class PostServiceImpl implements PostService {
                         .modifiedDate(post.getModifiedDate())
                         .build());
     }
-
 
     private User getUserByEmail(String email) {
         return userRepo.findByEmail(email)
@@ -193,9 +193,21 @@ public class PostServiceImpl implements PostService {
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
     }
 
-    private void validateAdminRole(Club club, User user) {
-        if (club.getUserRole(user) != ClubUser.Role.ADMIN) {
-            throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
+    private void validateAccessPermission(Category category, ClubUser.Role userRole) {
+        if (category.getPermissionRange().equals(Category.Role.ADMIN) && userRole.equals(ClubUser.Role.USER)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+    }
+
+    private ClubUser.Role getUserRoleInClub(Club club, User user) {
+        return club.getUserRole(user);
+    }
+
+    private void validatePostOwnership(Long postId, User user) {
+        Post post = getPostByIdAndDeletedFalse(postId);
+
+        if (!post.getWriter().equals(user)) {
+            throw new CustomException(ErrorCode.POST_OWNER_MISMATCH);
         }
     }
 

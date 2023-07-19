@@ -33,7 +33,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void createCategory(RequestCreateCategory dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
-
         User currentUser = getUserByEmail(email);
 
         validateAdminRole(findClub, currentUser);
@@ -42,6 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .club(findClub)
                 .title(dto.getCategoryTitle())
                 .description(dto.getCategoryDescription())
+                .permissionRange(Category.Role.valueOf(dto.getCategoryPermissionRange().toUpperCase()))
                 .build());
     }
 
@@ -49,24 +49,26 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void updateCategory(RequestUpdateCategory dto, String email) {
         Category findCategory = getCategoryByIdAndDeletedFalse(dto.getCategoryId());
-
         User currentUser = getUserByEmail(email);
 
         validateAdminRole(findCategory.getClub(), currentUser);
 
         findCategory.updateCategoryTitle(dto.getCategoryTitle());
         findCategory.updateCategoryDescription(dto.getCategoryDescription());
+
+        validateDtoAccessRange(dto);
+
+        findCategory.updateCategoryAccessRange(Category.Role.valueOf(dto.getCategoryPermissionRange().toUpperCase()));
     }
 
 
     @Override
     @Transactional
     public void deleteCategory(Long categoryId, String email) {
-        // TODO: 카테고리에 속한 게시글이 있을 경우 삭제 불가능하도록 예외 처리
-
         Category findCategory = getCategoryByIdAndDeletedFalse(categoryId);
-
         User currentUser = getUserByEmail(email);
+
+        throwErrorIfPostsExistInCategory(findCategory);
 
         validateAdminRole(findCategory.getClub(), currentUser);
 
@@ -85,6 +87,7 @@ public class CategoryServiceImpl implements CategoryService {
                         .clubId(category.getClub().getId())
                         .categoryTitle(category.getTitle())
                         .categoryDescription(category.getDescription())
+                        .categoryPermissionRange(category.getPermissionRange().toString())
                         .createdDate(category.getCreatedDate())
                         .modifiedDate(category.getModifiedDate())
                         .build())
@@ -106,9 +109,25 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
+    private void throwErrorIfPostsExistInCategory(Category category) {
+        if (category.getPostList().size() > 0) {
+            throw new CustomException(ErrorCode.POSTS_EXIST_IN_CATEGORY);
+        }
+    }
+
     private void validateAdminRole(Club club, User user) {
         if (club.getUserRole(user) != ClubUser.Role.ADMIN) {
             throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
+        }
+    }
+
+    private void validateDtoAccessRange(RequestUpdateCategory dto) {
+        if (dto.getCategoryPermissionRange() != null) {
+            try {
+                Category.Role.valueOf(dto.getCategoryPermissionRange().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new CustomException(ErrorCode.INVALID_CATEGORY_ACCESS_RANGE);
+            }
         }
     }
 

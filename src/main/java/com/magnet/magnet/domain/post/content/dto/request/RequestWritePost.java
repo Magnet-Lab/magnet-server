@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @Builder
 @Schema(description = "게시글 생성 요청")
-public class RequestCreatePost {
+public class RequestWritePost {
 
     @Schema(description = "동아리 id")
     private Long clubId;

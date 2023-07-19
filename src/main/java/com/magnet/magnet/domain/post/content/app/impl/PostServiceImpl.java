@@ -1,12 +1,13 @@
 package com.magnet.magnet.domain.post.content.app.impl;
 
 import com.magnet.magnet.domain.club.dao.ClubRepo;
+import com.magnet.magnet.domain.club.dao.ClubUserRepo;
 import com.magnet.magnet.domain.club.domain.Club;
 import com.magnet.magnet.domain.club.domain.ClubUser;
 import com.magnet.magnet.domain.post.content.app.PostService;
 import com.magnet.magnet.domain.post.content.dao.PostRepo;
 import com.magnet.magnet.domain.post.content.domain.Post;
-import com.magnet.magnet.domain.post.content.dto.request.RequestCreatePost;
+import com.magnet.magnet.domain.post.content.dto.request.RequestWritePost;
 import com.magnet.magnet.domain.post.content.dto.request.RequestUpdatePost;
 import com.magnet.magnet.domain.post.content.dto.response.ResponsePost;
 import com.magnet.magnet.domain.post.category.dao.CategoryRepo;
@@ -31,17 +32,19 @@ public class PostServiceImpl implements PostService {
 
     private final UserRepo userRepo;
 
+    private final ClubUserRepo clubUserRepo;
+
     private final CategoryRepo categoryRepo;
 
     @Override
     @Transactional
-    public ResponsePost createPost(RequestCreatePost dto, String email) {
+    public ResponsePost writePost(RequestWritePost dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
         Category findCategory = getCategoryByTitleAndClubAndDeletedFalse(dto.getCategoryTitle(), findClub);
-
         User currentUser = getUserByEmail(email);
+        ClubUser.Role currentUserRole = getUserRoleInClub(findClub, currentUser);
 
-        validateAccessPermission(findCategory, getUserRoleInClub(findClub, currentUser));
+        validateAccessPermission(findCategory, currentUserRole);
 
         Post createPost = postRepo.save(Post.builder()
                 .title(dto.getTitle())
@@ -52,13 +55,15 @@ public class PostServiceImpl implements PostService {
                 .location(dto.getLocation())
                 .build());
 
+        String writerNickname = getNicknameByUserInClub(findClub, currentUser);
+
         // TODO: 동아리에 가입한 유저 또는 카테고리를 구독한 유저들에게 알림 보내기
 
         return ResponsePost.builder()
                 .id(createPost.getId())
                 .title(createPost.getTitle())
                 .content(createPost.getContent())
-                .writer(createPost.getWriter().getNickname())
+                .writer(writerNickname)
                 .categoryTitle(createPost.getCategory().getTitle())
                 .location(createPost.getLocation())
                 .createdDate(createPost.getCreatedDate())
@@ -74,22 +79,25 @@ public class PostServiceImpl implements PostService {
 
         validatePostOwnership(dto.getPostId(), currentUser);
 
-        Post findPost = getPostByIdAndDeletedFalse(dto.getPostId());
+        Post targetPost = getPostByIdAndDeletedFalse(dto.getPostId());
 
-        findPost.updatePostTitle(dto.getTitle());
-        findPost.updatePostContent(dto.getContent());
-        findPost.updatePostCategory(getCategoryByTitleAndClubAndDeletedFalse(dto.getCategoryTitle(), findClub));
-        findPost.updatePostLocation(dto.getLocation());
+        targetPost.updatePostTitle(dto.getTitle());
+        targetPost.updatePostContent(dto.getContent());
+        targetPost.updatePostCategory(getCategoryByTitleAndClubAndDeletedFalse(dto.getCategoryTitle(), findClub));
+        targetPost.updatePostLocation(dto.getLocation());
+
+        User writer = targetPost.getWriter();
+        String writerNickname = getNicknameByUserInClub(findClub, writer);
 
         return ResponsePost.builder()
-                .id(findPost.getId())
-                .title(findPost.getTitle())
-                .content(findPost.getContent())
-                .writer(findPost.getWriter().getNickname())
-                .categoryTitle(findPost.getCategory().getTitle())
-                .location(findPost.getLocation())
-                .createdDate(findPost.getCreatedDate())
-                .modifiedDate(findPost.getModifiedDate())
+                .id(targetPost.getId())
+                .title(targetPost.getTitle())
+                .content(targetPost.getContent())
+                .writer(writerNickname)
+                .categoryTitle(targetPost.getCategory().getTitle())
+                .location(targetPost.getLocation())
+                .createdDate(targetPost.getCreatedDate())
+                .modifiedDate(targetPost.getModifiedDate())
                 .build();
     }
 
@@ -103,37 +111,44 @@ public class PostServiceImpl implements PostService {
             validatePostOwnership(postId, currentUser);
         }
 
-        Post findPost = getPostByIdAndDeletedFalse(postId);
+        Post targetPost = getPostByIdAndDeletedFalse(postId);
 
-        findPost.deletePost();
+        targetPost.deletePost();
+
+        User writer = targetPost.getWriter();
+        String writerNickname = getNicknameByUserInClub(findClub, writer);
 
         return ResponsePost.builder()
-                .id(findPost.getId())
-                .title(findPost.getTitle())
-                .content(findPost.getContent())
-                .writer(findPost.getWriter().getNickname())
-                .categoryTitle(findPost.getCategory().getTitle())
-                .location(findPost.getLocation())
-                .createdDate(findPost.getCreatedDate())
-                .modifiedDate(findPost.getModifiedDate())
+                .id(targetPost.getId())
+                .title(targetPost.getTitle())
+                .content(targetPost.getContent())
+                .writer(writerNickname)
+                .categoryTitle(targetPost.getCategory().getTitle())
+                .location(targetPost.getLocation())
+                .createdDate(targetPost.getCreatedDate())
+                .modifiedDate(targetPost.getModifiedDate())
                 .build();
     }
 
     @Override
     @Transactional(readOnly = true)
     public ResponsePost getPost(Long postId) {
-        return postRepo.findByIdAndDeletedFalse(postId)
-                .map(post -> ResponsePost.builder()
-                        .id(post.getId())
-                        .title(post.getTitle())
-                        .content(post.getContent())
-                        .writer(post.getWriter().getNickname())
-                        .categoryTitle(post.getCategory().getTitle())
-                        .location(post.getLocation())
-                        .createdDate(post.getCreatedDate())
-                        .modifiedDate(post.getModifiedDate())
-                        .build())
-                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        Post findPost = getPostByIdAndDeletedFalse(postId);
+
+        Club findClub = findPost.getClub();
+        User writer = findPost.getWriter();
+        String writerNickname = getNicknameByUserInClub(findClub, writer);
+
+        return ResponsePost.builder()
+                .id(findPost.getId())
+                .title(findPost.getTitle())
+                .content(findPost.getContent())
+                .writer(writerNickname)
+                .categoryTitle(findPost.getCategory().getTitle())
+                .location(findPost.getLocation())
+                .createdDate(findPost.getCreatedDate())
+                .modifiedDate(findPost.getModifiedDate())
+                .build();
     }
 
     @Override
@@ -146,7 +161,7 @@ public class PostServiceImpl implements PostService {
                         .id(post.getId())
                         .title(post.getTitle())
                         .content(post.getContent())
-                        .writer(post.getWriter().getNickname())
+                        .writer(getNicknameByUserInClub(findClub, post.getWriter()))
                         .categoryTitle(post.getCategory().getTitle())
                         .location(post.getLocation())
                         .createdDate(post.getCreatedDate())
@@ -165,7 +180,7 @@ public class PostServiceImpl implements PostService {
                         .id(post.getId())
                         .title(post.getTitle())
                         .content(post.getContent())
-                        .writer(post.getWriter().getNickname())
+                        .writer(getNicknameByUserInClub(findClub, post.getWriter()))
                         .categoryTitle(post.getCategory().getTitle())
                         .location(post.getLocation())
                         .createdDate(post.getCreatedDate())
@@ -176,6 +191,12 @@ public class PostServiceImpl implements PostService {
     private User getUserByEmail(String email) {
         return userRepo.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private String getNicknameByUserInClub(Club club, User user) {
+        return clubUserRepo.findByClubAndUserAndDeletedFalse(club, user)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND))
+                .getNickname();
     }
 
     private Club getClubByIdAndDeletedFalse(Long clubId) {

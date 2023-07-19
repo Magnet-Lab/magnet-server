@@ -1,7 +1,7 @@
 package com.magnet.magnet.domain.post.content.api;
 
 import com.magnet.magnet.domain.post.content.app.PostService;
-import com.magnet.magnet.domain.post.content.dto.request.RequestCreatePost;
+import com.magnet.magnet.domain.post.content.dto.request.RequestWritePost;
 import com.magnet.magnet.domain.post.content.dto.request.RequestUpdatePost;
 import com.magnet.magnet.domain.post.content.dto.response.ResponsePost;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,7 +22,7 @@ public class PostController {
 
     private final PostService postService;
 
-    @PostMapping("/create")
+    @PostMapping("/write")
     @Operation(
             summary = "동아리 내 게시글 생성",
             description = "동아리 내 게시글을 생성합니다.",
@@ -31,8 +31,8 @@ public class PostController {
                     @ApiResponse(responseCode = "403", description = "인증 오류 (토큰)"),
                     @ApiResponse(responseCode = "500", description = "관리자 문의")
             })
-    public ResponseEntity<ResponsePost> createPost(@RequestBody RequestCreatePost dto, Principal principal) {
-        return ResponseEntity.ok(postService.createPost(dto, principal.getName()));
+    public ResponseEntity<ResponsePost> writePost(@RequestBody RequestWritePost dto, Principal principal) {
+        return ResponseEntity.ok(postService.writePost(dto, principal.getName()));
     }
 
     @PutMapping("/update")

@@ -23,6 +23,9 @@ public class ResponseCategory {
     @Schema(description = "카테고리 설명")
     private String categoryDescription;
 
+    @Schema(description = "카테고리 접근 권한")
+    private String categoryPermissionRange;
+
     @Schema(description = "카테고리 생성일")
     private LocalDateTime createdDate;
 

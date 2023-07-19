@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface CategoryRepo extends JpaRepository<Category, Long> {
 
     Optional<Category> findByIdAndDeletedFalse(Long id);
+
     Optional<Category> findByTitleAndClubAndDeletedFalse(String categoryTitle, Club club);
 
     List<Category> findAllByClubAndDeletedFalse(Club club);

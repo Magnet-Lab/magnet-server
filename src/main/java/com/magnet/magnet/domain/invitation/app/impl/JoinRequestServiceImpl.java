@@ -34,7 +34,6 @@ public class JoinRequestServiceImpl implements JoinRequestService {
     @Transactional
     public void createJoinRequest(String invitationCode, String email) {
         Club findClub = getClubByInvitationCodeAndDeletedFalse(invitationCode);
-
         User currentUser = getUserByEmail(email);
 
         validateUserAndRequestNotExist(findClub, currentUser);
@@ -50,7 +49,6 @@ public class JoinRequestServiceImpl implements JoinRequestService {
     @Transactional(readOnly = true)
     public List<ResponseJoinRequest> getJoinRequestList(Long clubId, String email) {
         Club findClub = getClubByIdAndDeletedFalse(clubId);
-
         User currentUser = getUserByEmail(email);
 
         validateAdminRole(findClub, currentUser);
@@ -73,7 +71,6 @@ public class JoinRequestServiceImpl implements JoinRequestService {
     @Transactional
     public void acceptJoinRequest(Long joinRequestId, String email) {
         JoinRequest findRequest = getJoinRequestByIdAndStatusWaiting(joinRequestId);
-
         User currentUser = getUserByEmail(email);
 
         validateAdminRole(findRequest.getClub(), currentUser);
@@ -92,7 +89,6 @@ public class JoinRequestServiceImpl implements JoinRequestService {
     @Transactional
     public void rejectJoinRequest(Long joinRequestId, String email) {
         JoinRequest request = getJoinRequestByIdAndStatusWaiting(joinRequestId);
-
         User currentUser = getUserByEmail(email);
 
         validateAdminRole(request.getClub(), currentUser);

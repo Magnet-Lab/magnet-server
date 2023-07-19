@@ -59,6 +59,7 @@ public class SubscribeServiceImpl implements SubscribeService {
                         .categoryId(subscribe.getCategory().getId())
                         .categoryTitle(subscribe.getCategory().getTitle())
                         .categoryDescription(subscribe.getCategory().getDescription())
+                        .categoryPermissionRange(subscribe.getCategory().getPermissionRange().name())
                         .clubId(subscribe.getCategory().getClub().getId())
                         .clubTitle(subscribe.getCategory().getClub().getTitle())
                         .createdDate(subscribe.getCreatedDate())

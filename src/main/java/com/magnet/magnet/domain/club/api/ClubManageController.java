@@ -76,4 +76,17 @@ public class ClubManageController {
         return ResponseEntity.ok("닉네임 변경 완료");
     }
 
+    @GetMapping("/users")
+    @Operation(
+            summary = "동아리 내 인원 조회",
+            description = "동아리 내 인원을 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "요청 성공"),
+                    @ApiResponse(responseCode = "403", description = "인증 오류 (토큰)"),
+                    @ApiResponse(responseCode = "500", description = "관리자 문의")
+            })
+    public ResponseEntity<?> getUsersInClub(@RequestParam Long clubId, Principal principal) {
+        return ResponseEntity.ok(clubManageService.getUsersInClub(clubId, principal.getName()));
+    }
+
 }

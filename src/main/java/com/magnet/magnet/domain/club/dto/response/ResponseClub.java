@@ -23,10 +23,10 @@ public class ResponseClub {
     @Schema(description = "동아리 초대 코드")
     private String invitationCode;
 
-    @Schema(description = "동아리내 나의 역할")
+    @Schema(description = "동아리 내 나의 역할")
     private String myRole;
 
-    @Schema(description = "동아리내 나의 닉네임")
+    @Schema(description = "동아리 내 나의 닉네임")
     private String myNickname;
 
     @Schema(description = "동아리 생성일")

@@ -7,6 +7,7 @@ import com.magnet.magnet.domain.club.domain.Club;
 import com.magnet.magnet.domain.club.domain.ClubUser;
 import com.magnet.magnet.domain.club.dto.request.RequestManagement;
 import com.magnet.magnet.domain.club.dto.request.RequestUpdateNickname;
+import com.magnet.magnet.domain.club.dto.response.ResponseUserInClub;
 import com.magnet.magnet.domain.user.dao.UserRepo;
 import com.magnet.magnet.domain.user.domain.User;
 import com.magnet.magnet.global.exception.CustomException;
@@ -14,6 +15,9 @@ import com.magnet.magnet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -80,6 +84,24 @@ public class ClubManageServiceImpl implements ClubManageService {
         ClubUser targetClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, currentUser);
 
         targetClubUser.updateNickname(dto.getNickname());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ResponseUserInClub> getUsersInClub(Long clubId, String email) {
+        Club findClub = getClubByIdAndDeletedFalse(clubId);
+        User currentUser = getUserByEmail(email);
+
+        validateAdminRole(findClub, currentUser);
+
+        return clubUserRepo.findAllByClubAndDeletedFalse(findClub).stream()
+                .map(clubUser -> ResponseUserInClub.builder()
+                        .userId(clubUser.getUser().getId())
+                        .clubNickname(clubUser.getNickname())
+                        .defaultNickname(clubUser.getUser().getDefaultNickname())
+                        .role(clubUser.getRole().name())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private User getUserByEmail(String email) {

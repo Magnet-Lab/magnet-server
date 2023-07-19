@@ -28,7 +28,7 @@ public class User extends BaseTime implements UserDetails {
     @Column(unique = true)
     private String email;
 
-    private String nickname;
+    private String defaultNickname;
 
     @NotBlank(message = "가입 경로 필요")
     private String registrationId;

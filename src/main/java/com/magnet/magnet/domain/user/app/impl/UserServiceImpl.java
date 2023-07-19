@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserService {
         return ResponseUser.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .nickname(user.getNickname())
+                .defaultNickname(user.getDefaultNickname())
                 .registrationId(user.getRegistrationId())
                 .uid(user.getUid())
                 .build();

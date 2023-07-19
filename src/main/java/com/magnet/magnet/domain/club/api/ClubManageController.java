@@ -2,6 +2,7 @@ package com.magnet.magnet.domain.club.api;
 
 import com.magnet.magnet.domain.club.app.ClubManageService;
 import com.magnet.magnet.domain.club.dto.request.RequestManagement;
+import com.magnet.magnet.domain.club.dto.request.RequestUpdateNickname;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -59,6 +60,20 @@ public class ClubManageController {
     public ResponseEntity<String> deleteUser(@RequestBody RequestManagement dto, Principal principal) {
         clubManageService.deleteUser(dto, principal.getName());
         return ResponseEntity.ok("삭제 완료");
+    }
+
+    @PatchMapping("/nickname")
+    @Operation(
+            summary = "동아리에서 사용하는 닉네임 수정",
+            description = "동아리에서 사용하는 닉네임을 수정합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "요청 성공"),
+                    @ApiResponse(responseCode = "403", description = "인증 오류 (토큰)"),
+                    @ApiResponse(responseCode = "500", description = "관리자 문의")
+            })
+    public ResponseEntity<String> updateNickname(@RequestBody RequestUpdateNickname dto, Principal principal) {
+        clubManageService.updateClubNickname(dto, principal.getName());
+        return ResponseEntity.ok("닉네임 변경 완료");
     }
 
 }

@@ -16,7 +16,7 @@ public class ResponseUser {
     private String email;
 
     @Schema(description = "유저 닉네임")
-    private String nickname;
+    private String defaultNickname;
 
     @Schema(description = "유저 가입 경로")
     private String registrationId;

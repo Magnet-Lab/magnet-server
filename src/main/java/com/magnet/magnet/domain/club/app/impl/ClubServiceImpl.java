@@ -141,13 +141,15 @@ public class ClubServiceImpl implements ClubService {
         Club findClub = getClubByIdAndDeletedFalse(clubId);
         User findUser = getUserByEmail(email);
 
-        String myRole = getMyRoleByClubAndUser(findClub, findUser);
+        String myNickname = getNicknameByUserInClub(findClub, findUser);
+        String myRole = getRoleByClubAndUser(findClub, findUser);
 
         return ResponseClub.builder()
                 .id(findClub.getId())
                 .title(findClub.getTitle())
                 .description(findClub.getDescription())
                 .invitationCode(findClub.getInvitation().getInvitationCode())
+                .myNickname(myNickname)
                 .myRole(myRole)
                 .createdDate(findClub.getCreatedDate())
                 .modifiedDate(findClub.getModifiedDate())
@@ -168,6 +170,7 @@ public class ClubServiceImpl implements ClubService {
                         .title(clubUser.getClub().getTitle())
                         .description(clubUser.getClub().getDescription())
                         .invitationCode(clubUser.getClub().getInvitation().getInvitationCode())
+                        .myNickname(clubUser.getNickname())
                         .myRole(String.valueOf(clubUser.getRole()))
                         .createdDate(clubUser.getClub().getCreatedDate())
                         .modifiedDate(clubUser.getClub().getModifiedDate())
@@ -205,7 +208,13 @@ public class ClubServiceImpl implements ClubService {
         }
     }
 
-    private String getMyRoleByClubAndUser(Club club, User user) {
+    private String getNicknameByUserInClub(Club club, User user) {
+        return clubUserRepo.findByClubAndUserAndDeletedFalse(club, user)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND))
+                .getNickname();
+    }
+
+    private String getRoleByClubAndUser(Club club, User user) {
         return clubUserRepo.findByClubAndUserAndDeletedFalse(club, user)
                 .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND))
                 .getRole().toString();
@@ -228,6 +237,7 @@ public class ClubServiceImpl implements ClubService {
                 .club(club)
                 .user(user)
                 .role(ClubUser.Role.ADMIN)
+                .nickname(user.getDefaultNickname())
                 .deleted(false)
                 .build());
     }

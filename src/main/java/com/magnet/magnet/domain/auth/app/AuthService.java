@@ -53,7 +53,7 @@ public class AuthService {
                             userRepo.save(
                                     User.builder()
                                     .email(userInfo.getEmail())
-                                    .nickname(userInfo.getNickname())
+                                    .defaultNickname(userInfo.getNickname())
                                     .registrationId(dto.getRegistrationId())
                                     .uid(userInfo.getUid())
                                     .build()

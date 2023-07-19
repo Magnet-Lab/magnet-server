@@ -1,6 +1,8 @@
 package com.magnet.magnet.domain.club.domain;
 
 import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.global.exception.CustomException;
+import com.magnet.magnet.global.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +28,8 @@ public class ClubUser {
     @JoinColumn(name = "user_id")
     private User user;
 
+    private String nickname;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -35,6 +39,13 @@ public class ClubUser {
 
     @Builder.Default
     private boolean deleted = false;
+
+    public void updateNickname(String newNickname) {
+        if (newNickname == null || newNickname.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_PARAMETER);
+        }
+        this.nickname = newNickname;
+    }
 
     public void updateRoleToAdmin() {
         this.role = Role.ADMIN;

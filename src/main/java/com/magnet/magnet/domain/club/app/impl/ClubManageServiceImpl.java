@@ -6,6 +6,8 @@ import com.magnet.magnet.domain.club.dao.ClubUserRepo;
 import com.magnet.magnet.domain.club.domain.Club;
 import com.magnet.magnet.domain.club.domain.ClubUser;
 import com.magnet.magnet.domain.club.dto.request.RequestManagement;
+import com.magnet.magnet.domain.club.dto.request.RequestUpdateNickname;
+import com.magnet.magnet.domain.club.dto.response.ResponseUserInClub;
 import com.magnet.magnet.domain.user.dao.UserRepo;
 import com.magnet.magnet.domain.user.domain.User;
 import com.magnet.magnet.global.exception.CustomException;
@@ -13,6 +15,9 @@ import com.magnet.magnet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,33 +33,30 @@ public class ClubManageServiceImpl implements ClubManageService {
     @Transactional
     public void setUserAsAdmin(RequestManagement dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
-
         User currentUser = getUserByEmail(email);
 
         // 관리자가 아닌 경우 예외 처리
         validateAdminRole(findClub, currentUser);
 
         // 관리자로 만들려는 유저 찾기
-        User findUser = getUserById(dto.getUserId());
+        User targetUser = getUserById(dto.getUserId());
 
         // 관계 찾기
-        ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, findUser);
+        ClubUser targetClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, targetUser);
 
-        findClubUser.updateRoleToAdmin();
+        targetClubUser.updateRoleToAdmin();
     }
 
     @Override
     @Transactional
     public void setUserAsUser(RequestManagement dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
-
         User currentUser = getUserByEmail(email);
 
         validateAdminRole(findClub, currentUser);
 
-        User findUser = getUserById(dto.getUserId());
-
-        ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, findUser);
+        User targetUser = getUserById(dto.getUserId());
+        ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, targetUser);
 
         findClubUser.updateRoleToUser();
     }
@@ -63,16 +65,43 @@ public class ClubManageServiceImpl implements ClubManageService {
     @Transactional
     public void deleteUser(RequestManagement dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
-
         User currentUser = getUserByEmail(email);
 
         validateAdminRole(findClub, currentUser);
 
-        User findUser = getUserById(dto.getUserId());
-
-        ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, findUser);
+        User targetUser = getUserById(dto.getUserId());
+        ClubUser findClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, targetUser);
 
         findClubUser.deleteClubUser();
+    }
+
+    @Override
+    @Transactional
+    public void updateClubNickname(RequestUpdateNickname dto, String email) {
+        Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
+        User currentUser = getUserByEmail(email);
+
+        ClubUser targetClubUser = getClubUserByClubAndUserAndDeletedFalse(findClub, currentUser);
+
+        targetClubUser.updateNickname(dto.getNickname());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ResponseUserInClub> getUsersInClub(Long clubId, String email) {
+        Club findClub = getClubByIdAndDeletedFalse(clubId);
+        User currentUser = getUserByEmail(email);
+
+        validateAdminRole(findClub, currentUser);
+
+        return clubUserRepo.findAllByClubAndDeletedFalse(findClub).stream()
+                .map(clubUser -> ResponseUserInClub.builder()
+                        .userId(clubUser.getUser().getId())
+                        .clubNickname(clubUser.getNickname())
+                        .defaultNickname(clubUser.getUser().getDefaultNickname())
+                        .role(clubUser.getRole().name())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private User getUserByEmail(String email) {

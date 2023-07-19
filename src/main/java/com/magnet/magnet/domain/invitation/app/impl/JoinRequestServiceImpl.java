@@ -60,7 +60,7 @@ public class JoinRequestServiceImpl implements JoinRequestService {
                         .clubId(joinRequest.getClub().getId())
                         .clubTitle(joinRequest.getClub().getTitle())
                         .userId(joinRequest.getUser().getId())
-                        .userNickname(joinRequest.getUser().getNickname())
+                        .userNickname(joinRequest.getUser().getDefaultNickname())
                         .createdDate(joinRequest.getCreatedDate())
                         .modifiedDate(joinRequest.getModifiedDate())
                         .build())
@@ -71,16 +71,21 @@ public class JoinRequestServiceImpl implements JoinRequestService {
     @Transactional
     public void acceptJoinRequest(Long joinRequestId, String email) {
         JoinRequest findRequest = getJoinRequestByIdAndStatusWaiting(joinRequestId);
+
+        Club findClub = findRequest.getClub();
         User currentUser = getUserByEmail(email);
 
-        validateAdminRole(findRequest.getClub(), currentUser);
+        validateAdminRole(findClub, currentUser);
 
         findRequest.acceptRequest();
+
+        String userDefaultNickname = findRequest.getUser().getDefaultNickname();
 
         // 요청한 유저를 동아리에 추가
         clubUserRepo.save(ClubUser.builder()
                 .club(findRequest.getClub())
                 .user(findRequest.getUser())
+                .nickname(userDefaultNickname)
                 .role(ClubUser.Role.USER)
                 .build());
     }

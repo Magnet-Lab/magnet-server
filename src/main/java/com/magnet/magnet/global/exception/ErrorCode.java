@@ -36,6 +36,7 @@ public enum ErrorCode {
     INVITATION_CODE_ALREADY_EXIST(HttpStatus.CONFLICT, "이미 존재하는 초대 코드입니다."),
     SUBSCRIBE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 구독 중인 카테고리입니다."),
     POSTS_EXIST_IN_CATEGORY(HttpStatus.CONFLICT, "해당 카테고리에 게시글이 존재합니다."),
+    CATEGORY_TITLE_DUPLICATED(HttpStatus.CONFLICT, "해당 동아리에 이미 존재하는 카테고리 타이틀입니다."),
 
     /* 500 INTERNAL_SERVER_ERROR : 서버 내부 에러 */
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 에러가 발생했습니다."),

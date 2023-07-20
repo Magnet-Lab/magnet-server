@@ -15,4 +15,6 @@ public interface CategoryRepo extends JpaRepository<Category, Long> {
 
     List<Category> findAllByClubAndDeletedFalse(Club club);
 
+    boolean existsByClubAndTitleAndDeletedFalse(Club club, String categoryTitle);
+
 }

@@ -34,7 +34,7 @@ public class SubscribeController {
         return ResponseEntity.ok("카테고리 구독 완료.");
     }
 
-    @PatchMapping("/{category_id}")
+    @PatchMapping("/{subscribe_id}")
     @Operation(
             summary = "카테고리 구독 취소",
             description = "카테고리 구독을 취소합니다.",
@@ -43,8 +43,8 @@ public class SubscribeController {
                     @ApiResponse(responseCode = "403", description = "인증 오류 (토큰)"),
                     @ApiResponse(responseCode = "500", description = "관리자 문의")
             })
-    public ResponseEntity<String> unSubscribe(@PathVariable("category_id") Long categoryId, Principal principal) {
-        subscribeService.unSubscribe(categoryId, principal.getName());
+    public ResponseEntity<String> unSubscribe(@PathVariable("subscribe_id") Long subscribeId, Principal principal) {
+        subscribeService.unSubscribe(subscribeId, principal.getName());
         return ResponseEntity.ok("카테고리 구독 취소 완료.");
     }
 

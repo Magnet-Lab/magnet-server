@@ -37,11 +37,15 @@ public class CategoryServiceImpl implements CategoryService {
 
         validateAdminRole(findClub, currentUser);
 
+        validateCategoryTitle(findClub, dto.getCategoryTitle());
+
+        Category.Role permissionRange = validateDtoAccessRange(dto);
+
         categoryRepo.save(Category.builder()
                 .club(findClub)
                 .title(dto.getCategoryTitle())
                 .description(dto.getCategoryDescription())
-                .permissionRange(Category.Role.valueOf(dto.getCategoryPermissionRange().toUpperCase()))
+                .permissionRange(permissionRange)
                 .build());
     }
 
@@ -49,16 +53,18 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void updateCategory(RequestUpdateCategory dto, String email) {
         Category findCategory = getCategoryByIdAndDeletedFalse(dto.getCategoryId());
+        Club findClub = getClubByIdAndDeletedFalse(findCategory.getClub().getId());
         User currentUser = getUserByEmail(email);
 
         validateAdminRole(findCategory.getClub(), currentUser);
 
+        validateCategoryTitle(findClub, dto.getCategoryTitle());
+
+        Category.Role permissionRange = validateDtoAccessRange(dto);
+
         findCategory.updateCategoryTitle(dto.getCategoryTitle());
         findCategory.updateCategoryDescription(dto.getCategoryDescription());
-
-        validateDtoAccessRange(dto);
-
-        findCategory.updateCategoryAccessRange(Category.Role.valueOf(dto.getCategoryPermissionRange().toUpperCase()));
+        findCategory.updateCategoryAccessRange(permissionRange);
     }
 
 
@@ -121,13 +127,33 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
-    private void validateDtoAccessRange(RequestUpdateCategory dto) {
+    private Category.Role validateDtoAccessRange(RequestCreateCategory dto) {
+        Category.Role permissionRange = Category.Role.ADMIN;
         if (dto.getCategoryPermissionRange() != null) {
             try {
-                Category.Role.valueOf(dto.getCategoryPermissionRange().toUpperCase());
+                permissionRange = Category.Role.valueOf(dto.getCategoryPermissionRange().toUpperCase());
             } catch (IllegalArgumentException e) {
                 throw new CustomException(ErrorCode.INVALID_CATEGORY_ACCESS_RANGE);
             }
+        }
+        return permissionRange;
+    }
+
+    private Category.Role validateDtoAccessRange(RequestUpdateCategory dto) {
+        Category.Role permissionRange = Category.Role.ADMIN;
+        if (dto.getCategoryPermissionRange() != null) {
+            try {
+                permissionRange = Category.Role.valueOf(dto.getCategoryPermissionRange().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new CustomException(ErrorCode.INVALID_CATEGORY_ACCESS_RANGE);
+            }
+        }
+        return permissionRange;
+    }
+
+    private void validateCategoryTitle(Club club, String categoryTitle) {
+        if (categoryRepo.existsByClubAndTitleAndDeletedFalse(club, categoryTitle)) {
+            throw new CustomException(ErrorCode.CATEGORY_TITLE_DUPLICATED);
         }
     }
 

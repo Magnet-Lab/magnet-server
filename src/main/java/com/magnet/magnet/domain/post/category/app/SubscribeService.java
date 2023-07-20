@@ -8,7 +8,7 @@ public interface SubscribeService {
 
     void subscribe(Long categoryId, String email);
 
-    void unSubscribe(Long categoryId, String email);
+    void unSubscribe(Long subscribeId, String email);
 
     List<ResponseSubscribe> getSubscribeList(String email);
 

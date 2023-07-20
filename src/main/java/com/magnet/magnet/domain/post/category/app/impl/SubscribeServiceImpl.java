@@ -44,8 +44,8 @@ public class SubscribeServiceImpl implements SubscribeService {
 
     @Override
     @Transactional
-    public void unSubscribe(Long categoryId, String email) {
-        Subscribe findSubscribe = getSubscribeByIdAndStatus(categoryId, Subscribe.Status.SUBSCRIBE);
+    public void unSubscribe(Long subscribeId, String email) {
+        Subscribe findSubscribe = getSubscribeByIdAndStatus(subscribeId, Subscribe.Status.SUBSCRIBE);
 
         findSubscribe.unSubscribe();
     }

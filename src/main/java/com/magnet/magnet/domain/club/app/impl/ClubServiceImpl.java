@@ -41,17 +41,21 @@ public class ClubServiceImpl implements ClubService {
 
     private final CategoryRepo categoryRepo;
 
+    public static final Integer MAX_CLUB_JOIN_COUNT = 3;
+
     @Override
     @Transactional
     public ResponseClub createClub(RequestCreateClub dto, String email) {
         User currentUser = getUserByEmail(email);
 
-        // 생성하려는 유저가 가입한 동아리가 5개 이하인지 체크
+        // 생성하려는 유저가 가입한 동아리 개수가 MAX_CLUB_JOIN_COUNT 이하인지 체크
         validateActiveClubUserCountForUser(currentUser);
 
         // 동아리 초대 코드 중복 체크 및 생성
+        String invitationCode = generateUniqueInvitationCode();
+
         Invitation createInvitation = invitationRepo.save(Invitation.builder()
-                .invitationCode(generateUniqueInvitationCode())
+                .invitationCode(invitationCode)
                 .build());
 
         // 동아리 생성
@@ -203,7 +207,9 @@ public class ClubServiceImpl implements ClubService {
     }
 
     private void validateActiveClubUserCountForUser(User user) {
-        if (clubUserRepo.countByUserAndDeletedFalse(user) >= 5) {
+        int joinedClubCount = clubUserRepo.countByUserAndDeletedFalse(user);
+
+        if (joinedClubCount >= MAX_CLUB_JOIN_COUNT) {
             throw new CustomException(ErrorCode.CLUB_LIMIT_EXCEED);
         }
     }

@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static com.magnet.magnet.domain.club.app.impl.ClubServiceImpl.MAX_CLUB_JOIN_COUNT;
+
 @Service
 @RequiredArgsConstructor
 public class JoinRequestServiceImpl implements JoinRequestService {
@@ -35,6 +37,9 @@ public class JoinRequestServiceImpl implements JoinRequestService {
     public void createJoinRequest(String invitationCode, String email) {
         Club findClub = getClubByInvitationCodeAndDeletedFalse(invitationCode);
         User currentUser = getUserByEmail(email);
+
+        // 가입하려는 유저가 가입한 동아리 개수가 MAX_CLUB_JOIN_COUNT 이하인지 체크
+        validateActiveClubUserCountForUser(currentUser);
 
         validateUserAndRequestNotExist(findClub, currentUser);
 
@@ -125,6 +130,14 @@ public class JoinRequestServiceImpl implements JoinRequestService {
     private JoinRequest getJoinRequestByIdAndStatusWaiting(Long joinRequestId) {
         return joinRequestRepo.findByIdAndStatus(joinRequestId, JoinRequest.Status.WAITING)
                 .orElseThrow(() -> new CustomException(ErrorCode.JOIN_REQUEST_NOT_FOUND));
+    }
+
+    private void validateActiveClubUserCountForUser(User user) {
+        int joinedClubCount = clubUserRepo.countByUserAndDeletedFalse(user);
+
+        if (joinedClubCount >= MAX_CLUB_JOIN_COUNT) {
+            throw new CustomException(ErrorCode.CLUB_LIMIT_EXCEED);
+        }
     }
 
     private void validateUserAndRequestNotExist(Club club, User user) {

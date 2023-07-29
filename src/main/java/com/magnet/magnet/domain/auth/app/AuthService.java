@@ -1,6 +1,7 @@
 package com.magnet.magnet.domain.auth.app;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.magnet.magnet.domain.auth.dto.request.RequestMobileLogin;
 import com.magnet.magnet.domain.auth.dto.response.ResponseUserInfo;
 import com.magnet.magnet.domain.user.dao.UserRepo;
 import com.magnet.magnet.domain.user.domain.User;
@@ -63,6 +64,38 @@ public class AuthService {
 
         // 토큰 발급
         return tokenProvider.createToken(userInfo.getEmail());
+    }
+
+    @Transactional
+    public ResponseToken registerAndLoginInMobile(RequestMobileLogin dto) {
+        String userEmail = dto.getEmail();
+        String userDefaultNickname = dto.getDefaultNickname();
+        String userRegistrationId = dto.getRegistrationId();
+        String userUid = dto.getUid();
+
+        // 유저가 존재한다면 토큰 발급, 존재하지 않는다면 회원가입 후 토큰 발급
+        userRepo.findByEmail(userEmail)
+                .ifPresentOrElse(
+                        user -> {
+                            // 가입 경로가 다르다면 에러
+                            if (!user.getRegistrationId().equals(dto.getRegistrationId())) {
+                                throw new CustomException(ErrorCode.SOCIAL_LOGIN_ERROR);
+                            }
+                        },
+                        () -> {
+                            // 처음 로그인하는 유저라면 회원가입
+                            userRepo.save(User.builder()
+                                    .email(userEmail)
+                                    .defaultNickname(userDefaultNickname)
+                                    .registrationId(userRegistrationId)
+                                    .uid(userUid)
+                                    .build()
+                            );
+                        }
+                );
+
+        // 토큰 발급
+        return tokenProvider.createToken(userEmail);
     }
 
     // 로그아웃

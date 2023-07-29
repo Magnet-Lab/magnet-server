@@ -2,6 +2,7 @@ package com.magnet.magnet.domain.auth.api;
 
 import com.magnet.magnet.domain.auth.app.AuthService;
 import com.magnet.magnet.domain.auth.dto.request.RequestLogin;
+import com.magnet.magnet.domain.auth.dto.request.RequestMobileLogin;
 import com.magnet.magnet.domain.auth.dto.response.ResponseToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,6 +30,18 @@ public class AuthController {
             })
     public ResponseEntity<ResponseToken> login(@RequestBody RequestLogin dto) {
         return ResponseEntity.ok(authService.registerAndLogin(dto));
+    }
+
+    @PostMapping("/login/mobile")
+    @Operation(
+            summary = "모바일 로그인",
+            description = "모바일 로그인을 진행합니다",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "요청 성공"),
+                    @ApiResponse(responseCode = "400", description = "서버에 이메일이 없거나, 코드가 유효하지 않음")
+            })
+    public ResponseEntity<ResponseToken> mobileLogin(@RequestBody RequestMobileLogin dto) {
+        return ResponseEntity.ok(authService.registerAndLoginInMobile(dto));
     }
 
     @PostMapping("/logout")

@@ -1,6 +1,6 @@
-package com.magnet.magnet.domain.club.domain;
+package com.magnet.magnet.domain.club.entity;
 
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.global.exception.CustomException;
 import com.magnet.magnet.global.exception.ErrorCode;
 import jakarta.persistence.*;

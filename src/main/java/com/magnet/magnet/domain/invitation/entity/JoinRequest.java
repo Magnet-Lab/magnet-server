@@ -1,7 +1,7 @@
-package com.magnet.magnet.domain.invitation.domain;
+package com.magnet.magnet.domain.invitation.entity;
 
-import com.magnet.magnet.domain.club.domain.Club;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.club.entity.Club;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.global.common.BaseTime;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

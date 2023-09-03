@@ -1,7 +1,7 @@
-package com.magnet.magnet.domain.club.domain;
+package com.magnet.magnet.domain.club.entity;
 
-import com.magnet.magnet.domain.invitation.domain.Invitation;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.invitation.entity.Invitation;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.global.common.BaseTime;
 import com.magnet.magnet.global.exception.CustomException;
 import com.magnet.magnet.global.exception.ErrorCode;

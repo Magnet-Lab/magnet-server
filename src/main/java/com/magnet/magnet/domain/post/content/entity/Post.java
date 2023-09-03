@@ -1,8 +1,8 @@
-package com.magnet.magnet.domain.post.content.domain;
+package com.magnet.magnet.domain.post.content.entity;
 
-import com.magnet.magnet.domain.club.domain.Club;
-import com.magnet.magnet.domain.post.category.domain.Category;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.club.entity.Club;
+import com.magnet.magnet.domain.post.category.entity.Category;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.global.common.BaseTime;
 import com.magnet.magnet.global.exception.CustomException;
 import com.magnet.magnet.global.exception.ErrorCode;

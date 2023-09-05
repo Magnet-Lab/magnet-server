@@ -2,14 +2,14 @@ package com.magnet.magnet.domain.invitation.app.impl;
 
 import com.magnet.magnet.domain.club.dao.ClubRepo;
 import com.magnet.magnet.domain.club.dao.ClubUserRepo;
-import com.magnet.magnet.domain.club.domain.Club;
-import com.magnet.magnet.domain.club.domain.ClubUser;
+import com.magnet.magnet.domain.club.entity.Club;
+import com.magnet.magnet.domain.club.entity.ClubUser;
 import com.magnet.magnet.domain.invitation.app.JoinRequestService;
 import com.magnet.magnet.domain.invitation.dao.JoinRequestRepo;
-import com.magnet.magnet.domain.invitation.domain.JoinRequest;
+import com.magnet.magnet.domain.invitation.entity.JoinRequest;
 import com.magnet.magnet.domain.invitation.dto.response.ResponseJoinRequest;
 import com.magnet.magnet.domain.user.dao.UserRepo;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.global.exception.CustomException;
 import com.magnet.magnet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.magnet.magnet.domain.club.app.impl.ClubServiceImpl.MAX_CLUB_JOIN_COUNT;
 
@@ -39,7 +40,7 @@ public class JoinRequestServiceImpl implements JoinRequestService {
         User currentUser = getUserByEmail(email);
 
         // 가입하려는 유저가 가입한 동아리 개수가 MAX_CLUB_JOIN_COUNT 이하인지 체크
-        validateActiveClubUserCountForUser(currentUser);
+        validateActiveClubUserCountForUser(findClub, email);
 
         validateUserAndRequestNotExist(findClub, currentUser);
 
@@ -132,8 +133,8 @@ public class JoinRequestServiceImpl implements JoinRequestService {
                 .orElseThrow(() -> new CustomException(ErrorCode.JOIN_REQUEST_NOT_FOUND));
     }
 
-    private void validateActiveClubUserCountForUser(User user) {
-        int joinedClubCount = clubUserRepo.countByUserAndDeletedFalse(user);
+    private void validateActiveClubUserCountForUser(Club club, String email) {
+        int joinedClubCount = club.getClubUsers().stream().filter(clubUser -> clubUser.getUser().getEmail().equals(email)).toList().size();
 
         if (joinedClubCount >= MAX_CLUB_JOIN_COUNT) {
             throw new CustomException(ErrorCode.CLUB_LIMIT_EXCEED);
@@ -141,16 +142,19 @@ public class JoinRequestServiceImpl implements JoinRequestService {
     }
 
     private void validateUserAndRequestNotExist(Club club, User user) {
-        boolean isUserInClub = clubUserRepo.existsByClubAndUserAndDeletedFalse(club, user);
-        boolean isRequestExist = joinRequestRepo.existsByClubAndUserAndStatus(club, user, JoinRequest.Status.WAITING);
+        Optional<JoinRequest> optionalJoinRequest = joinRequestRepo.findByClubAndUserAndStatus(club, user, JoinRequest.Status.WAITING);
 
-        if (isUserInClub) {
-            throw new CustomException(ErrorCode.CLUB_USER_ALREADY_EXIST);
-        }
+        if (optionalJoinRequest.isPresent()) {
+            boolean isJoined = club.getClubUsers().stream().anyMatch(clubUser -> clubUser.getUser().equals(user) && !clubUser.isDeleted());
 
-        if (isRequestExist) {
+            if (isJoined) {
+                throw new CustomException(ErrorCode.CLUB_USER_ALREADY_EXIST);
+            }
+
             throw new CustomException(ErrorCode.JOIN_REQUEST_ALREADY_EXIST);
         }
     }
+
+
 
 }

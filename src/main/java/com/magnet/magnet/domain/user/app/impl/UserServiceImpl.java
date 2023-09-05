@@ -2,7 +2,7 @@ package com.magnet.magnet.domain.user.app.impl;
 
 import com.magnet.magnet.domain.user.app.UserService;
 import com.magnet.magnet.domain.user.dao.UserRepo;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.domain.user.dto.response.ResponseUser;
 import com.magnet.magnet.global.exception.CustomException;
 import com.magnet.magnet.global.exception.ErrorCode;

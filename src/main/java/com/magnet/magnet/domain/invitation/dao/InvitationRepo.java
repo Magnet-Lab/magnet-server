@@ -1,6 +1,6 @@
 package com.magnet.magnet.domain.invitation.dao;
 
-import com.magnet.magnet.domain.invitation.domain.Invitation;
+import com.magnet.magnet.domain.invitation.entity.Invitation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

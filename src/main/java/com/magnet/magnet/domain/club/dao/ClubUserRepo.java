@@ -1,8 +1,8 @@
 package com.magnet.magnet.domain.club.dao;
 
-import com.magnet.magnet.domain.club.domain.Club;
-import com.magnet.magnet.domain.club.domain.ClubUser;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.club.entity.Club;
+import com.magnet.magnet.domain.club.entity.ClubUser;
+import com.magnet.magnet.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -15,8 +15,6 @@ public interface ClubUserRepo extends JpaRepository<ClubUser, Long> {
     List<ClubUser> findAllByUserAndDeletedFalse(User user);
 
     List<ClubUser> findAllByClubAndDeletedFalse(Club club);
-
-    boolean existsByClubAndUserAndDeletedFalse(Club club, User user);
 
     int countByUserAndDeletedFalse(User user);
 

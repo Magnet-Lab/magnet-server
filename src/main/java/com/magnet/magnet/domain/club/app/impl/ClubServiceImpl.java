@@ -3,19 +3,19 @@ package com.magnet.magnet.domain.club.app.impl;
 import com.magnet.magnet.domain.club.app.ClubService;
 import com.magnet.magnet.domain.club.dao.ClubRepo;
 import com.magnet.magnet.domain.club.dao.ClubUserRepo;
-import com.magnet.magnet.domain.club.domain.Club;
-import com.magnet.magnet.domain.club.domain.ClubUser;
+import com.magnet.magnet.domain.club.entity.Club;
+import com.magnet.magnet.domain.club.entity.ClubUser;
 import com.magnet.magnet.domain.club.dto.request.RequestCreateClub;
 import com.magnet.magnet.domain.club.dto.request.RequestUpdateClub;
 import com.magnet.magnet.domain.club.dto.response.ResponseClub;
 import com.magnet.magnet.domain.invitation.dao.InvitationRepo;
 import com.magnet.magnet.domain.invitation.dao.JoinRequestRepo;
-import com.magnet.magnet.domain.invitation.domain.Invitation;
-import com.magnet.magnet.domain.invitation.domain.JoinRequest;
+import com.magnet.magnet.domain.invitation.entity.Invitation;
+import com.magnet.magnet.domain.invitation.entity.JoinRequest;
 import com.magnet.magnet.domain.post.category.dao.CategoryRepo;
-import com.magnet.magnet.domain.post.category.domain.Category;
+import com.magnet.magnet.domain.post.category.entity.Category;
 import com.magnet.magnet.domain.user.dao.UserRepo;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.global.exception.CustomException;
 import com.magnet.magnet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -142,11 +142,11 @@ public class ClubServiceImpl implements ClubService {
     @Override
     @Transactional
     public ResponseClub getClub(Long clubId, String email) {
-        Club findClub = getClubByIdAndDeletedFalse(clubId);
-        User findUser = getUserByEmail(email);
+        Club findClub = getClubByIdAndUserEmailAndDeletedFalse(clubId, email);
+        ClubUser myClubUser = getClubUserByClubAndUserEmailAndDeletedFalse(findClub, email);
 
-        String myNickname = getNicknameByUserInClub(findClub, findUser);
-        String myRole = getRoleByClubAndUser(findClub, findUser);
+        String myNickname = myClubUser.getNickname();
+        String myRole = String.valueOf(myClubUser.getRole());
 
         return ResponseClub.builder()
                 .id(findClub.getId())
@@ -200,6 +200,11 @@ public class ClubServiceImpl implements ClubService {
                 .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
     }
 
+    private Club getClubByIdAndUserEmailAndDeletedFalse(Long clubId, String email) {
+        return clubRepo.findByIdAndClubUsers_User_EmailAndDeletedFalse(clubId, email)
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_NOT_FOUND));
+    }
+
     private void validateAdminRole(Club club, User user) {
         if (club.getUserRole(user) != ClubUser.Role.ADMIN) {
             throw new CustomException(ErrorCode.CLUB_USER_NOT_FOUND);
@@ -212,18 +217,6 @@ public class ClubServiceImpl implements ClubService {
         if (joinedClubCount >= MAX_CLUB_JOIN_COUNT) {
             throw new CustomException(ErrorCode.CLUB_LIMIT_EXCEED);
         }
-    }
-
-    private String getNicknameByUserInClub(Club club, User user) {
-        return clubUserRepo.findByClubAndUserAndDeletedFalse(club, user)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND))
-                .getNickname();
-    }
-
-    private String getRoleByClubAndUser(Club club, User user) {
-        return clubUserRepo.findByClubAndUserAndDeletedFalse(club, user)
-                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND))
-                .getRole().toString();
     }
 
     private void deleteClubUsers(Club club) {
@@ -246,6 +239,13 @@ public class ClubServiceImpl implements ClubService {
                 .nickname(user.getDefaultNickname())
                 .deleted(false)
                 .build());
+    }
+
+    private ClubUser getClubUserByClubAndUserEmailAndDeletedFalse(Club club, String email) {
+        return club.getClubUsers().stream()
+                .filter(clubUser -> clubUser.getUser().getEmail().equals(email))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(ErrorCode.CLUB_USER_NOT_FOUND));
     }
 
 }

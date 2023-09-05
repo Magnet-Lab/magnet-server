@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.magnet.magnet.domain.auth.dto.request.RequestMobileLogin;
 import com.magnet.magnet.domain.auth.dto.response.ResponseUserInfo;
 import com.magnet.magnet.domain.user.dao.UserRepo;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.domain.auth.dto.request.RequestLogin;
 import com.magnet.magnet.domain.auth.dto.response.ResponseToken;
 import com.magnet.magnet.global.auth.jwt.TokenProvider;

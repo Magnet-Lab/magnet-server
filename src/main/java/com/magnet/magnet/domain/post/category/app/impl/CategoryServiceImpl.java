@@ -1,16 +1,16 @@
 package com.magnet.magnet.domain.post.category.app.impl;
 
 import com.magnet.magnet.domain.club.dao.ClubRepo;
-import com.magnet.magnet.domain.club.domain.Club;
-import com.magnet.magnet.domain.club.domain.ClubUser;
+import com.magnet.magnet.domain.club.entity.Club;
+import com.magnet.magnet.domain.club.entity.ClubUser;
 import com.magnet.magnet.domain.post.category.app.CategoryService;
 import com.magnet.magnet.domain.post.category.dao.CategoryRepo;
-import com.magnet.magnet.domain.post.category.domain.Category;
+import com.magnet.magnet.domain.post.category.entity.Category;
 import com.magnet.magnet.domain.post.category.dto.request.RequestCreateCategory;
 import com.magnet.magnet.domain.post.category.dto.request.RequestUpdateCategory;
 import com.magnet.magnet.domain.post.category.dto.response.ResponseCategory;
 import com.magnet.magnet.domain.user.dao.UserRepo;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.global.exception.CustomException;
 import com.magnet.magnet.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void createCategory(RequestCreateCategory dto, String email) {
         Club findClub = getClubByIdAndDeletedFalse(dto.getClubId());
-        User currentUser = getUserByEmail(email);
+        User currentUser = getUserByClubAndEmail(findClub, email);
 
         validateAdminRole(findClub, currentUser);
 
@@ -54,7 +54,7 @@ public class CategoryServiceImpl implements CategoryService {
     public void updateCategory(RequestUpdateCategory dto, String email) {
         Category findCategory = getCategoryByIdAndDeletedFalse(dto.getCategoryId());
         Club findClub = getClubByIdAndDeletedFalse(findCategory.getClub().getId());
-        User currentUser = getUserByEmail(email);
+        User currentUser = getUserByClubAndEmail(findClub, email);
 
         validateAdminRole(findCategory.getClub(), currentUser);
 
@@ -102,6 +102,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     private User getUserByEmail(String email) {
         return userRepo.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private User getUserByClubAndEmail(Club club, String email) {
+        return club.getClubUsers().stream().map(ClubUser::getUser).filter(user -> user.getEmail().equals(email)).findFirst()
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 

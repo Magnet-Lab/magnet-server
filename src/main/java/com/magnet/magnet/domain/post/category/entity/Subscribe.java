@@ -1,7 +1,6 @@
-package com.magnet.magnet.domain.invitation.domain;
+package com.magnet.magnet.domain.post.category.entity;
 
-import com.magnet.magnet.domain.club.domain.Club;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.user.entity.User;
 import com.magnet.magnet.global.common.BaseTime;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -14,15 +13,15 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class JoinRequest extends BaseTime {
+public class Subscribe extends BaseTime {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "club_id")
-    private Club club;
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -30,18 +29,14 @@ public class JoinRequest extends BaseTime {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private Status status = Status.WAITING;
+    private Subscribe.Status status = Subscribe.Status.SUBSCRIBE;
 
     public enum Status {
-        WAITING, ACCEPTED, REJECTED
+        SUBSCRIBE, UNSUBSCRIBE
     }
 
-    public void acceptRequest() {
-        this.status = Status.ACCEPTED;
-    }
-
-    public void rejectRequest() {
-        this.status = Status.REJECTED;
+    public void unSubscribe() {
+        this.status = Status.UNSUBSCRIBE;
     }
 
 }

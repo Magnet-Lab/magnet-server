@@ -1,4 +1,4 @@
-package com.magnet.magnet.domain.invitation.domain;
+package com.magnet.magnet.domain.invitation.entity;
 
 import com.magnet.magnet.global.common.BaseTime;
 import jakarta.persistence.*;

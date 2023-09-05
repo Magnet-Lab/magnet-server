@@ -1,8 +1,8 @@
 package com.magnet.magnet.domain.post.category.dao;
 
-import com.magnet.magnet.domain.post.category.domain.Category;
-import com.magnet.magnet.domain.post.category.domain.Subscribe;
-import com.magnet.magnet.domain.user.domain.User;
+import com.magnet.magnet.domain.post.category.entity.Category;
+import com.magnet.magnet.domain.post.category.entity.Subscribe;
+import com.magnet.magnet.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.magnet.magnet.domain.post.category.dao;
 
-import com.magnet.magnet.domain.club.domain.Club;
-import com.magnet.magnet.domain.post.category.domain.Category;
+import com.magnet.magnet.domain.club.entity.Club;
+import com.magnet.magnet.domain.post.category.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
